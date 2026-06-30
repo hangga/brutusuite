@@ -1,44 +1,36 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-
-<meta charset="utf-8">
-
-<link rel="stylesheet" href="popup.css">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Monitor</title>
+  <link rel="stylesheet" href="popup.css" />
 </head>
-
 <body>
+  <header id="toolbar">
+    <div class="brand">
+      <span class="icon">⚡</span>
+      <span>API Monitor</span>
+    </div>
+    <div class="actions">
+      <button id="attach" class="btn primary">Attach</button>
+      <button id="clear" class="btn secondary">Clear</button>
+    </div>
+  </header>
 
-<div id="toolbar">
+  <div id="search-bar">
+    <span class="search-icon">🔍</span>
+    <input id="search" type="text" placeholder="Filter by URL…" spellcheck="false" />
+    <span id="count-badge">0</span>
+  </div>
 
-<button id="attach">
+  <div id="logs"></div>
 
-Attach
+  <footer id="status-bar">
+    <span id="status-text">Ready</span>
+    <span id="status-count">0 requests</span>
+  </footer>
 
-</button>
-
-<button id="clear">
-
-Clear
-
-</button>
-
-<input
-id="search"
-placeholder="Search..."
->
-
-</div>
-
-<div id="logs">
-
-</div>
-
-<script src="popup.js"></script>
-
+  <script src="popup.js"></script>
 </body>
-
 </html>

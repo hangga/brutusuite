@@ -1,24 +1,13 @@
 {
   "manifest_version": 3,
   "name": "API Monitor",
-  "description": "Capture Fetch/XHR API Requests",
-  "version": "1.0",
-
-  "permissions": [
-    "storage",
-    "tabs",
-    "activeTab",
-    "debugger"
-  ],
-
-  "host_permissions": [
-    "<all_urls>"
-  ],
-
+  "description": "Capture Fetch/XHR API Requests with edit & replay",
+  "version": "1.2",
+  "permissions": ["storage", "tabs", "activeTab", "debugger"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
-
   "action": {
     "default_popup": "popup.html",
     "default_title": "API Monitor"

@@ -1,5 +1,6 @@
 let attachedTabs = {};
 let logs = [];
+const MAX_LOGS = 200;
 
 const pendingRequests = new Map();
 
@@ -9,7 +10,7 @@ async function saveLogs() {
 
 async function addLog(item) {
     logs.unshift(item);
-    if (logs.length > 1000) logs.pop();
+    if (logs.length > MAX_LOGS) logs.pop();
     await saveLogs();
 }
 
@@ -17,16 +18,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.storage.local.set({ logs: [] });
 });
 
-// Buka jendela popup saat ikon diklik
-chrome.action.onClicked.addListener(() => {
-    chrome.windows.create({
-        url: 'popup.html',
-        type: 'popup',          // tampil seperti modal
-        width: 700,
-        height: 700,
-        focused: true
-    });
-});
+// Hapus action.onClicked agar tidak ada popup
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.action === "attach") {

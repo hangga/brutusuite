@@ -3,6 +3,7 @@ let logs = [];
 let expandedId = null;
 let editingId = null;
 let isAttached = false;
+let sendingIdx = null; // index log yang sedang dikirim
 
 // ── DOM refs ──
 const logsContainer = document.getElementById('logs');
@@ -66,11 +67,85 @@ function render() {
   }
 }
 
+// function buildDetailContent(log, idx) {
+//   const isEditing = (editingId === idx);
+//   const isSending = (sendingIdx === idx);
+//   const headersStr = JSON.stringify(log.requestHeaders || {}, null, 2);
+//   const bodyStr = log.response || '';
+//   const reqBody = log.requestBody || '';
+
+//   // Status pengiriman (jika sedang mengirim)
+//   let sendStatusHtml = '';
+//   if (isSending) {
+//     sendStatusHtml = `<div class="send-status sending"><span class="spinner"></span> Sending...</div>`;
+//   } else if (log.sendStatus) {
+//     const statusClass = log.sendStatus === 'success' ? 'success' : 'error';
+//     sendStatusHtml = `<div class="send-status ${statusClass}">${log.sendStatus === 'success' ? '✅ Sent' : '❌ Failed'}</div>`;
+//   }
+
+//   return `
+//     <div class="detail-section">
+//       <label>URL</label>
+//       <div class="value ${isEditing ? 'editable' : ''}" data-field="url">
+//         ${isEditing ? `<input type="text" value="${escapeHtml(log.url)}" />` : escapeHtml(log.url)}
+//       </div>
+//     </div>
+//     <div class="detail-section">
+//       <label>Method</label>
+//       <div class="value ${isEditing ? 'editable' : ''}" data-field="method">
+//         ${isEditing ? `<input type="text" value="${log.method || 'GET'}" />` : (log.method || 'GET')}
+//       </div>
+//     </div>
+//     <div class="detail-section">
+//       <label>Request Headers</label>
+//       <div class="value ${isEditing ? 'editable' : ''}" data-field="headers">
+//         ${isEditing ? `<textarea rows="3">${escapeHtml(headersStr)}</textarea>` : escapeHtml(headersStr)}
+//       </div>
+//     </div>
+//     <div class="detail-section">
+//       <label>Request Body (if any)</label>
+//       <div class="value ${isEditing ? 'editable' : ''}" data-field="body">
+//         ${isEditing ? `<textarea rows="2">${escapeHtml(reqBody)}</textarea>` : (reqBody ? escapeHtml(reqBody) : '<i style="color:#666">(none)</i>')}
+//       </div>
+//     </div>
+//     <div class="detail-section">
+//       <label>Response</label>
+//       <div class="value" style="max-height:200px;">
+//         ${escapeHtml(bodyStr)}
+//       </div>
+//     </div>
+//     <div class="detail-actions">
+//       ${isEditing ? `
+//         <button class="btn btn-send" data-action="send" data-idx="${idx}" ${isSending ? 'disabled' : ''}>
+//           ${isSending ? '⏳ Sending...' : '▶ Send'}
+//         </button>
+//         <button class="btn btn-cancel" data-action="cancel" data-idx="${idx}" ${isSending ? 'disabled' : ''}>Cancel</button>
+//       ` : `
+//         <button class="btn btn-edit" data-action="edit" data-idx="${idx}">✎ Edit</button>
+//         <button class="btn btn-copy" data-action="copy" data-idx="${idx}">📋 Copy cURL</button>
+//       `}
+//       ${sendStatusHtml}
+//     </div>
+//   `;
+// }
 function buildDetailContent(log, idx) {
   const isEditing = (editingId === idx);
+  const isSending = (sendingIdx === idx);
   const headersStr = JSON.stringify(log.requestHeaders || {}, null, 2);
   const bodyStr = log.response || '';
   const reqBody = log.requestBody || '';
+
+  let sendStatusHtml = '';
+  if (isSending) {
+    sendStatusHtml = `<div class="send-status sending"><span class="spinner"></span> Sending...</div>`;
+  } else if (log.sendStatus) {
+    const isSuccess = log.sendStatus === 'success';
+    const statusClass = isSuccess ? 'success' : 'error';
+    const icon = isSuccess ? '✅' : '❌';
+    const label = isSuccess ? 'Sent' : 'Failed';
+    const detail = isSuccess ? `${log.status} (${log.sendDuration || '?'}ms)` : (log.sendError || '');
+    sendStatusHtml = `<div class="send-status ${statusClass}">${icon} ${label} ${detail}</div>`;
+  }
 
   return `
     <div class="detail-section">
@@ -105,12 +180,15 @@ function buildDetailContent(log, idx) {
     </div>
     <div class="detail-actions">
       ${isEditing ? `
-        <button class="btn btn-send" data-action="send" data-idx="${idx}">▶ Send</button>
-        <button class="btn btn-cancel" data-action="cancel" data-idx="${idx}">Cancel</button>
+        <button class="btn btn-send" data-action="send" data-idx="${idx}" ${isSending ? 'disabled' : ''}>
+          ${isSending ? '⏳ Sending...' : '▶ Send'}
+        </button>
+        <button class="btn btn-cancel" data-action="cancel" data-idx="${idx}" ${isSending ? 'disabled' : ''}>Cancel</button>
       ` : `
         <button class="btn btn-edit" data-action="edit" data-idx="${idx}">✎ Edit</button>
         <button class="btn btn-copy" data-action="copy" data-idx="${idx}">📋 Copy cURL</button>
       `}
+      ${sendStatusHtml}
     </div>
   `;
 }
@@ -206,14 +284,18 @@ function generateCurl(log) {
   return parts.join(' \\\n  ');
 }
 
-// ── Send request (replay) ──
+// ── Send request (replay) dengan visual feedback ──
 async function sendRequest(idx) {
+  // Cegah double send
+  if (sendingIdx !== null) return;
+
   const log = logs[idx];
   if (!log) return;
 
   const detail = document.querySelector(`.log-detail[data-index="${idx}"]`);
   if (!detail) return;
 
+  // Ambil nilai dari field yang diedit
   const urlInput = detail.querySelector('[data-field="url"] input');
   const methodInput = detail.querySelector('[data-field="method"] input');
   const headersInput = detail.querySelector('[data-field="headers"] textarea');
@@ -230,6 +312,12 @@ async function sendRequest(idx) {
   }
   let body = bodyInput ? bodyInput.value : (log.requestBody || '');
 
+  // Set status sending
+  sendingIdx = idx;
+  // Hapus status sebelumnya
+  delete log.sendStatus;
+  render(); // re-render untuk menampilkan spinner
+
   try {
     statusText.textContent = 'Sending…';
     const fetchOptions = {
@@ -239,9 +327,13 @@ async function sendRequest(idx) {
     if (method !== 'GET' && method !== 'HEAD' && body) {
       fetchOptions.body = body;
     }
+
+    const startTime = Date.now();
     const response = await fetch(url, fetchOptions);
+    const elapsed = Date.now() - startTime;
     const responseBody = await response.text();
 
+    // Update log dengan hasil baru
     const newLog = {
       ...log,
       url: url,
@@ -252,14 +344,32 @@ async function sendRequest(idx) {
       status: response.status,
       statusText: response.statusText,
       time: new Date().toLocaleTimeString(),
+      sendStatus: response.ok ? 'success' : 'error',
+      sendDuration: elapsed,
     };
     logs[idx] = newLog;
     await chrome.storage.local.set({ logs });
-    editingId = null;
+
+    // Reset sending state
+    sendingIdx = null;
     expandedId = idx;
     render();
-    statusText.textContent = `Sent (${response.status})`;
+    statusText.textContent = `Sent (${response.status}) in ${elapsed}ms`;
+    // Efek flash
+    const statusEl = document.getElementById('status-text');
+    statusEl.classList.remove('flash');
+    void statusEl.offsetWidth;
+    statusEl.classList.add('flash');
   } catch (err) {
+    // Error
+    logs[idx] = {
+      ...log,
+      sendStatus: 'error',
+      sendError: err.message,
+    };
+    await chrome.storage.local.set({ logs });
+    sendingIdx = null;
+    render();
     statusText.textContent = `Error: ${err.message}`;
   }
 }
@@ -298,6 +408,7 @@ document.getElementById('clear').onclick = async () => {
     logs = [];
     expandedId = null;
     editingId = null;
+    sendingIdx = null;
     render();
     statusText.textContent = 'Cleared';
   } else {
@@ -305,7 +416,6 @@ document.getElementById('clear').onclick = async () => {
   }
 };
 
-// Tombol Attach tetap tersedia untuk re-attach manual
 document.getElementById('attach').onclick = async () => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const response = await chrome.runtime.sendMessage({ action: 'attach', tabId: tabs[0].id });
@@ -318,10 +428,9 @@ document.getElementById('attach').onclick = async () => {
   }
 };
 
-// ── 🔥 STORAGE ONCHANGED (TANPA POLLING) 🔥 ──
+// ── Storage onChanged (tanpa polling) ──
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local' && changes.logs) {
-    // Hanya refresh jika data logs berubah
     refresh();
   }
 });
@@ -331,6 +440,3 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   await refresh();
   await autoAttach();
 })();
-
-// ── ❌ TIDAK ADA setInterval lagi! ──
-// Ekstensi hanya akan update saat ada perubahan storage

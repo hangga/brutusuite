@@ -51,46 +51,115 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
     }
 });
 
+// chrome.debugger.onEvent.addListener(async (source, method, params) => {
+//     if (method !== "Network.responseReceived") return;
+//     if (!attachedTabs[source.tabId]) return;
+
+//     const requestId = params.requestId;
+//     const pending = pendingRequests.get(requestId);
+//     if (!pending) return;
+
+//     let page;
+//     try {
+//         page = await chrome.tabs.get(source.tabId);
+//     } catch {
+//         return;
+//     }
+//     const pageHost = new URL(page.url).hostname;
+//     const url = params.response.url;
+//     const apiHost = new URL(url).hostname;
+//     const base = pageHost.split('.').slice(-2).join('.');
+//     if (!apiHost.endsWith(base)) return;
+//     if (params.type !== "XHR" && params.type !== "Fetch") return;
+
+//     let body = "";
+//     try {
+//         const response = await chrome.debugger.sendCommand(source, "Network.getResponseBody", {
+//             requestId: requestId
+//         });
+//         body = response.body;
+//     } catch {}
+
+//     await addLog({
+//         time: new Date().toLocaleTimeString(),
+//         url: url,
+//         status: params.response.status,
+//         statusText: params.response.statusText || "",
+//         mime: params.response.mimeType,
+//         method: pending.method || 'GET',
+//         requestHeaders: pending.headers || {},
+//         requestBody: pending.postData || '',
+//         response: body
+//     });
+
+//     pendingRequests.delete(requestId);
+// });
+
+// background.js – bagian event Network.responseReceived
+
 chrome.debugger.onEvent.addListener(async (source, method, params) => {
-    if (method !== "Network.responseReceived") return;
-    if (!attachedTabs[source.tabId]) return;
+  if (method !== "Network.responseReceived") return;
+  if (!attachedTabs[source.tabId]) return;
 
-    const requestId = params.requestId;
-    const pending = pendingRequests.get(requestId);
-    if (!pending) return;
+  const requestId = params.requestId;
+  const pending = pendingRequests.get(requestId);
+  if (!pending) return;
 
-    let page;
-    try {
-        page = await chrome.tabs.get(source.tabId);
-    } catch {
-        return;
-    }
-    const pageHost = new URL(page.url).hostname;
-    const url = params.response.url;
-    const apiHost = new URL(url).hostname;
-    const base = pageHost.split('.').slice(-2).join('.');
-    if (!apiHost.endsWith(base)) return;
-    if (params.type !== "XHR" && params.type !== "Fetch") return;
+  let page;
+  try {
+    page = await chrome.tabs.get(source.tabId);
+  } catch {
+    return;
+  }
+  const pageHost = new URL(page.url).hostname;
+  const url = params.response.url;
+  const apiHost = new URL(url).hostname;
+  const base = pageHost.split('.').slice(-2).join('.');
+  if (!apiHost.endsWith(base)) return;
+  if (params.type !== "XHR" && params.type !== "Fetch") return;
 
-    let body = "";
-    try {
-        const response = await chrome.debugger.sendCommand(source, "Network.getResponseBody", {
-            requestId: requestId
-        });
-        body = response.body;
-    } catch {}
-
-    await addLog({
-        time: new Date().toLocaleTimeString(),
-        url: url,
-        status: params.response.status,
-        statusText: params.response.statusText || "",
-        mime: params.response.mimeType,
-        method: pending.method || 'GET',
-        requestHeaders: pending.headers || {},
-        requestBody: pending.postData || '',
-        response: body
+  let body = "";
+  try {
+    const response = await chrome.debugger.sendCommand(source, "Network.getResponseBody", {
+      requestId: requestId
     });
+    // Dekode jika base64
+    if (response.base64Encoded) {
+      // Untuk konten teks (JSON, XML, dll) gunakan atob
+      // Jika konten biner, sebaiknya simpan sebagai base64 atau tampilkan placeholder
+      try {
+        body = atob(response.body);
+      } catch {
+        body = response.body; // tetap simpan base64 jika gagal
+      }
+    } else {
+      body = response.body;
+    }
+  } catch {}
 
-    pendingRequests.delete(requestId);
+  // --- Ambil response headers ---
+  const rawHeaders = params.response.headers || [];
+  const responseHeaders = {};
+  if (Array.isArray(rawHeaders)) {
+    rawHeaders.forEach(h => {
+      responseHeaders[h.name] = h.value;
+    });
+  } else if (typeof rawHeaders === 'object') {
+    Object.assign(responseHeaders, rawHeaders);
+  }
+
+  await addLog({
+    time: new Date().toLocaleTimeString(),
+    url: url,
+    status: params.response.status,
+    statusText: params.response.statusText || "",
+    mime: params.response.mimeType,
+    method: pending.method || 'GET',
+    requestHeaders: pending.headers || {},
+    requestBody: pending.postData || '',
+    response: body,
+    responseHeaders: responseHeaders  // <-- tambahkan ini
+  });
+
+  pendingRequests.delete(requestId);
 });

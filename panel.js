@@ -108,6 +108,7 @@ function headersToObject(arr) {
 
 // ── Validasi URL ──
 function ensureValidUrl(url) {
+  url = url.trim();
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     url = 'https://' + url;
   }
@@ -127,6 +128,7 @@ function cleanHeaders(headers) {
     if (!trimmedKey) continue;                      // key kosong
     if (trimmedKey.startsWith(':')) continue;      // pseudo-header (HTTP/2)
     if (/[\s:]/.test(trimmedKey)) continue;        // mengandung spasi atau titik dua
+    if (/[\x00-\x1f\x7f]/.test(trimmedKey)) continue; // karakter kontrol
     const lowerKey = trimmedKey.toLowerCase();
     if (forbidden.includes(lowerKey)) continue;
     const val = (value !== undefined && value !== null) ? String(value) : '';
@@ -143,11 +145,8 @@ function filterLogs() {
   const content = filterContent.value.toLowerCase().trim();
 
   return logs.filter(log => {
-    // URL filter
     if (keyword && !log.url.toLowerCase().includes(keyword)) return false;
-    // Method filter
     if (method && log.method !== method) return false;
-    // Status filter
     if (status) {
       const code = log.status;
       if (status === '2xx' && (code < 200 || code >= 300)) return false;
@@ -155,7 +154,6 @@ function filterLogs() {
       if (status === '4xx' && (code < 400 || code >= 500)) return false;
       if (status === '5xx' && (code < 500 || code >= 600)) return false;
     }
-    // Content filter (search in URL, request body, response)
     if (content) {
       const haystack = (log.url + ' ' + (log.requestBody || '') + ' ' + (log.response || '')).toLowerCase();
       if (!haystack.includes(content)) return false;
@@ -218,7 +216,7 @@ function selectLog(idx) {
 async function updateLogProperty(idx, property, value) {
   if (idx === null || idx >= logs.length) return;
   logs[idx] = { ...logs[idx], [property]: value };
-  await chrome.storage.local.set({ logs });
+  await saveLogs();
   if (selectedId === idx) {
     renderDetail(idx);
   }
@@ -240,7 +238,6 @@ function renderDetail(idx) {
   const isEditing = (editingId === idx);
   const isSending = (sendingId === idx);
 
-  // Normalisasi data (default)
   if (!log.queryParams) log.queryParams = [];
   if (!log.bodyMode) log.bodyMode = 'raw';
   if (!log.bodyRawType) log.bodyRawType = 'text';
@@ -250,7 +247,6 @@ function renderDetail(idx) {
 
   let html = '';
 
-  // ── Actions ──
   html += `<div class="detail-actions">`;
   if (isEditing) {
     html += `<button class="btn btn-send" id="action-send" ${isSending ? 'disabled' : ''}>
@@ -270,7 +266,6 @@ function renderDetail(idx) {
   }
   html += `</div>`;
 
-  // ── Tabs utama (Request / Response) ──
   html += `<div class="detail-tabs">
     <button class="detail-tab ${activeTab === 'request' ? 'active' : ''}" data-tab="request">
       Request
@@ -281,10 +276,8 @@ function renderDetail(idx) {
     </button>
   </div>`;
 
-  // ── REQUEST PANEL ──
   html += `<div class="tab-panel ${activeTab === 'request' ? 'active' : ''}" data-panel="request">`;
 
-  // Meta: method + URL
   if (isEditing) {
     html += `<div class="request-meta">
       <div class="method-wrap">
@@ -309,7 +302,6 @@ function renderDetail(idx) {
     </div>`;
   }
 
-  // Sub-tabs (hanya saat editing)
   if (isEditing) {
     html += `<div class="sub-tabs">
       <button class="sub-tab ${activeSubTab === 'params' ? 'active' : ''}" data-subtab="params">Params</button>
@@ -325,9 +317,7 @@ function renderDetail(idx) {
     html += renderBodySubtab(log, idx);
     html += `</div>`;
   } else {
-    // Read-only mode: tampilkan semua info secara ringkas
     html += `<div class="readonly-detail">`;
-    // Headers
     const headersArr = headersToArray(log.requestHeaders || {});
     html += `<div class="ro-section"><label>Headers</label>`;
     if (headersArr.length) {
@@ -338,7 +328,6 @@ function renderDetail(idx) {
       html += `<div class="ro-empty">(no headers)</div>`;
     }
     html += `</div>`;
-    // Body
     html += `<div class="ro-section"><label>Body</label>`;
     if (log.requestBody) {
       html += `<div class="ro-body">${formatOutput(log.requestBody)}</div>`;
@@ -349,9 +338,8 @@ function renderDetail(idx) {
     html += `</div>`;
   }
 
-  html += `</div>`; // end request panel
+  html += `</div>`;
 
-  // ── RESPONSE PANEL ──
   html += `<div class="tab-panel ${activeTab === 'response' ? 'active' : ''}" data-panel="response">`;
   if (log.status) {
     const sc = statusClass(log.status);
@@ -362,7 +350,6 @@ function renderDetail(idx) {
       <span class="rbadge">${log.mime || 'unknown'}</span>
     </div>`;
 
-    // Response headers
     const respHeaders = headersToArray(log.responseHeaders || {});
     html += `<div class="response-headers">
       <label>Response Headers</label>
@@ -379,7 +366,6 @@ function renderDetail(idx) {
     }
     html += `</div></div>`;
 
-    // Response body
     html += `<div class="response-body">
       <label>Response Body</label>
       <div class="rb-content">${log.response ? formatOutput(log.response) : '<span class="empty-hint">(empty)</span>'}</div>
@@ -387,9 +373,8 @@ function renderDetail(idx) {
   } else {
     html += `<div style="color:#666;padding:20px 0;text-align:center;font-style:italic;">No response yet</div>`;
   }
-  html += `</div>`; // end response panel
+  html += `</div>`;
 
-  // ── NOTE SECTION ──
   html += `<div class="note-area">
     <label>📝 Note</label>
     <textarea id="log-note" placeholder="Add your note here...">${escapeHtml(log.note || '')}</textarea>
@@ -397,9 +382,6 @@ function renderDetail(idx) {
 
   detailContent.innerHTML = html;
 
-  // ── Wire up events ──
-
-  // Tabs utama (Request / Response)
   detailContent.querySelectorAll('.detail-tab').forEach(tab => {
     tab.addEventListener('click', function(e) {
       const tabName = this.dataset.tab;
@@ -410,7 +392,6 @@ function renderDetail(idx) {
     });
   });
 
-  // Sub-tabs
   detailContent.querySelectorAll('.sub-tab').forEach(tab => {
     tab.addEventListener('click', function(e) {
       const subTab = this.dataset.subtab;
@@ -421,7 +402,6 @@ function renderDetail(idx) {
     });
   });
 
-  // Edit, Cancel, Send, Copy
   const editBtn = detailContent.querySelector('#action-edit');
   if (editBtn) {
     editBtn.addEventListener('click', () => {
@@ -445,14 +425,12 @@ function renderDetail(idx) {
     copyBtn.addEventListener('click', () => copyAsCurl(idx));
   }
 
-  // Note textarea auto-save
   const noteTextarea = document.getElementById('log-note');
   if (noteTextarea) {
     noteTextarea.addEventListener('input', () => {
       const newNote = noteTextarea.value;
       logs[idx].note = newNote;
-      chrome.storage.local.set({ logs });
-      // Update daftar jika note berubah
+      saveLogs();
       renderList();
     });
   }
@@ -462,7 +440,6 @@ function renderDetail(idx) {
   }
 }
 
-// ── Render Params Subtab ──
 function renderParamsSubtab(log, idx) {
   const params = log.queryParams || [];
   let html = `<div class="sub-panel ${activeSubTab === 'params' ? 'active' : ''}" data-subpanel="params">
@@ -489,7 +466,6 @@ function renderParamsSubtab(log, idx) {
   return html;
 }
 
-// ── Render Auth Subtab ──
 function renderAuthSubtab(log, idx) {
   const auth = log.auth || { type: 'none' };
   let html = `<div class="sub-panel ${activeSubTab === 'auth' ? 'active' : ''}" data-subpanel="auth">
@@ -537,7 +513,6 @@ function renderAuthSubtab(log, idx) {
   return html;
 }
 
-// ── Render Headers Subtab ──
 function renderHeadersSubtab(log, idx) {
   const headersArr = headersToArray(log.requestHeaders || {});
   let html = `<div class="sub-panel ${activeSubTab === 'headers' ? 'active' : ''}" data-subpanel="headers">
@@ -561,7 +536,6 @@ function renderHeadersSubtab(log, idx) {
   return html;
 }
 
-// ── Render Body Subtab ──
 function renderBodySubtab(log, idx) {
   const mode = log.bodyMode || 'none';
   const rawType = log.bodyRawType || 'text';
@@ -639,7 +613,6 @@ function renderBodySubtab(log, idx) {
   return html;
 }
 
-// ── Helper: build URL with query params ──
 function buildUrlWithParams(log) {
   let url = log.url || '';
   const params = log.queryParams || [];
@@ -651,17 +624,14 @@ function buildUrlWithParams(log) {
   return url;
 }
 
-// ── Attach events for subtabs ──
 function attachSubtabEvents(idx) {
   const log = logs[idx];
   if (!log) return;
 
-  // ── Params ──
   const paramRows = document.querySelectorAll('.params-row:not(.header-row)');
   const paramAdd = document.querySelector('.param-add');
   const paramContainer = document.querySelector('.params-table');
 
-  // Update params on input
   paramRows.forEach(row => {
     const keyInput = row.querySelector('.param-key');
     const valInput = row.querySelector('.param-value');
@@ -682,7 +652,6 @@ function attachSubtabEvents(idx) {
         log.url = newUrl;
         urlInput.value = newUrl;
       }
-      // chrome.storage.local.set({ logs });
       saveLogs();
     };
     if (keyInput) keyInput.addEventListener('input', update);
@@ -728,7 +697,7 @@ function attachSubtabEvents(idx) {
           log.url = newUrl;
           urlInput.value = newUrl;
         }
-        chrome.storage.local.set({ logs });
+        saveLogs();
       };
       keyInput.addEventListener('input', update);
       valInput.addEventListener('input', update);
@@ -742,7 +711,6 @@ function attachSubtabEvents(idx) {
     });
   }
 
-  // ── Auth ──
   const authType = document.getElementById('auth-type');
   if (authType) {
     authType.addEventListener('change', () => {
@@ -756,7 +724,7 @@ function attachSubtabEvents(idx) {
       } else if (authType.value === 'oauth2') {
         log.auth = { type: 'oauth2', grantType: 'client_credentials', tokenUrl: '', clientId: '', clientSecret: '', scope: '', accessToken: '' };
       }
-      chrome.storage.local.set({ logs });
+      saveLogs();
       renderDetail(idx);
     });
   }
@@ -766,13 +734,13 @@ function attachSubtabEvents(idx) {
   if (basicUsername) {
     basicUsername.addEventListener('input', () => {
       log.auth.username = basicUsername.value;
-      chrome.storage.local.set({ logs });
+      saveLogs();
     });
   }
   if (basicPassword) {
     basicPassword.addEventListener('input', () => {
       log.auth.password = basicPassword.value;
-      chrome.storage.local.set({ logs });
+      saveLogs();
     });
   }
 
@@ -780,7 +748,7 @@ function attachSubtabEvents(idx) {
   if (bearerToken) {
     bearerToken.addEventListener('input', () => {
       log.auth.token = bearerToken.value;
-      chrome.storage.local.set({ logs });
+      saveLogs();
     });
   }
 
@@ -797,13 +765,13 @@ function attachSubtabEvents(idx) {
   const saveOAuth2Field = (field, value) => {
     if (!log.auth) log.auth = { type: 'oauth2' };
     log.auth[field] = value;
-    chrome.storage.local.set({ logs });
+    saveLogs();
   };
 
   if (oauth2Grant) {
     oauth2Grant.addEventListener('change', () => {
       log.auth.grantType = oauth2Grant.value;
-      chrome.storage.local.set({ logs });
+      saveLogs();
       renderDetail(idx);
     });
   }
@@ -846,7 +814,7 @@ function attachSubtabEvents(idx) {
           auth.accessToken = data.access_token;
           if (oauth2AccessToken) oauth2AccessToken.value = data.access_token;
           statusText.textContent = 'Token obtained!';
-          chrome.storage.local.set({ logs });
+          saveLogs();
         } else {
           statusText.textContent = 'Error: ' + (data.error || 'No access_token');
         }
@@ -856,7 +824,6 @@ function attachSubtabEvents(idx) {
     });
   }
 
-  // ── Headers ──
   const headersContainer = document.getElementById('headers-container');
   if (headersContainer) {
     headersContainer.addEventListener('click', (e) => {
@@ -890,7 +857,6 @@ function attachSubtabEvents(idx) {
     });
   }
 
-  // ── Body ──
   const bodyMode = document.getElementById('body-mode');
   if (bodyMode) {
     bodyMode.addEventListener('change', () => {
@@ -907,7 +873,7 @@ function attachSubtabEvents(idx) {
       } else if (bodyMode.value === 'raw') {
         log.requestBody = log.requestBody || '';
       }
-      chrome.storage.local.set({ logs });
+      saveLogs();
       renderDetail(idx);
     });
   }
@@ -916,7 +882,7 @@ function attachSubtabEvents(idx) {
   if (bodyRawType) {
     bodyRawType.addEventListener('change', () => {
       log.bodyRawType = bodyRawType.value;
-      chrome.storage.local.set({ logs });
+      saveLogs();
     });
   }
 
@@ -924,7 +890,7 @@ function attachSubtabEvents(idx) {
   if (bodyTextarea) {
     bodyTextarea.addEventListener('input', () => {
       log.requestBody = bodyTextarea.value;
-      chrome.storage.local.set({ logs });
+      saveLogs();
     });
   }
 
@@ -998,13 +964,13 @@ function attachSubtabEvents(idx) {
   if (methodSelect) {
     methodSelect.addEventListener('change', () => {
       log.method = methodSelect.value;
-      chrome.storage.local.set({ logs });
+      saveLogs();
     });
   }
   if (urlInput) {
     urlInput.addEventListener('input', () => {
       log.url = urlInput.value;
-      chrome.storage.local.set({ logs });
+      saveLogs();
       const preview = document.getElementById('url-preview');
       if (preview) preview.textContent = buildUrlWithParams(log);
     });
@@ -1021,7 +987,7 @@ function updateHeadersFromUI(idx) {
     if (key) headers.push({ key, value: val });
   });
   log.requestHeaders = headersToObject(headers);
-  chrome.storage.local.set({ logs });
+  saveLogs();
 }
 
 function attachHeaderEvents(row, idx) {
@@ -1048,14 +1014,13 @@ function updateFormFieldsFromUI(idx) {
       } else {
         const fileInput = row.querySelector('.form-file');
         const filename = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0].name : '';
-        // Simpan fileObj sementara untuk dikirim (tidak disimpan di storage)
         const fileObj = fileInput && fileInput.files[0] ? fileInput.files[0] : null;
         fields.push({ key, value: filename, type: 'file', fileObj });
       }
     }
   });
   log.formDataFields = fields;
-  chrome.storage.local.set({ logs });
+  saveLogs();
 }
 
 function attachFormRowEvents(row, idx) {
@@ -1098,7 +1063,7 @@ function updateUrlencodedFromUI(idx) {
     if (key) fields.push({ key, value: val });
   });
   log.formDataFields = fields;
-  chrome.storage.local.set({ logs });
+  saveLogs();
 }
 
 function attachUrlencodedRowEvents(row, idx) {
@@ -1111,7 +1076,6 @@ function attachUrlencodedRowEvents(row, idx) {
   if (rmBtn) rmBtn.addEventListener('click', update);
 }
 
-// ── Send request (diperbaiki) ──
 async function sendRequest(idx) {
   if (sendingId !== null) return;
   const log = logs[idx];
@@ -1125,7 +1089,8 @@ async function sendRequest(idx) {
   let method = methodSelect ? methodSelect.value : (log.method || 'GET');
   let body = bodyTextarea ? bodyTextarea.value : (log.requestBody || '');
 
-  // Kumpulkan headers dari UI
+  url = url.trim();
+
   const headersArr = [];
   document.querySelectorAll('#headers-container .headers-row:not(.header-row)').forEach(row => {
     const key = row.querySelector('.header-key').value.trim();
@@ -1134,7 +1099,6 @@ async function sendRequest(idx) {
   });
   let headers = headersToObject(headersArr);
 
-  // Auth
   const auth = log.auth || { type: 'none' };
   if (auth.type === 'basic') {
     const creds = btoa(unescape(encodeURIComponent(`${auth.username || ''}:${auth.password || ''}`)));
@@ -1145,13 +1109,11 @@ async function sendRequest(idx) {
     if (auth.accessToken) headers['Authorization'] = `Bearer ${auth.accessToken}`;
   }
 
-  // Bersihkan header (buang yang tidak valid)
   headers = cleanHeaders(headers);
 
   const mode = log.bodyMode || 'none';
   let fetchOptions = { method, headers };
 
-  // Siapkan body berdasarkan mode
   if (mode === 'raw') {
     const rawType = log.bodyRawType || 'text';
     if (rawType === 'json' && !headers['content-type'] && !headers['Content-Type']) {
@@ -1170,7 +1132,6 @@ async function sendRequest(idx) {
         if (f.fileObj && f.fileObj instanceof File) {
           formData.append(f.key, f.fileObj, f.fileObj.name);
         } else if (f.value) {
-          // fallback: kirim nama file sebagai string
           formData.append(f.key, f.value);
         }
       } else {
@@ -1178,7 +1139,6 @@ async function sendRequest(idx) {
       }
     });
     fetchOptions.body = formData;
-    // Hapus Content-Type agar browser mengatur boundary
     delete headers['Content-Type'];
     delete headers['content-type'];
   } else if (mode === 'x-www-form-urlencoded') {
@@ -1193,18 +1153,13 @@ async function sendRequest(idx) {
     }
   }
 
-  // Hapus body untuk method GET/HEAD
   if (method === 'GET' || method === 'HEAD') {
     delete fetchOptions.body;
   }
 
-  // Update headers setelah modifikasi
   fetchOptions.headers = headers;
-
-  // Validasi URL
   url = ensureValidUrl(url);
 
-  // Debug (bisa dihapus setelah selesai)
   console.log('[BrutuSuite] Sending:', { url, method, headers, body: fetchOptions.body });
 
   sendingId = idx;
@@ -1254,7 +1209,6 @@ async function sendRequest(idx) {
   }
 }
 
-// ── Copy cURL dengan flag -b jika ada Cookie ──
 function copyAsCurl(idx) {
   const log = logs[idx];
   if (!log) return;
@@ -1272,7 +1226,6 @@ function copyAsCurl(idx) {
   });
 }
 
-// ── generateCurl dengan -b untuk Cookie ──
 function generateCurl(log) {
   const method = log.method || 'GET';
   const url = log.url;
@@ -1281,17 +1234,15 @@ function generateCurl(log) {
   let parts = [`curl -X ${method}`];
   
   let cookieHeader = '';
-  // Loop header, pisahkan Cookie
   for (const [k, v] of Object.entries(headers)) {
     const keyLower = k.toLowerCase();
     if (keyLower === 'cookie') {
       cookieHeader = v;
-      continue; // skip tambahkan sebagai -H
+      continue;
     }
     if (keyLower === 'host') continue;
     parts.push(`-H "${k}: ${v.replace(/"/g, '\\"')}"`);
   }
-  // Tambahkan -b jika ada cookie
   if (cookieHeader) {
     parts.push(`-b "${cookieHeader.replace(/"/g, '\\"')}"`);
   }
@@ -1304,7 +1255,6 @@ function generateCurl(log) {
   return parts.join(' \\\n  ');
 }
 
-// ── Refresh data ──
 async function refresh() {
   const result = await chrome.storage.local.get('logs');
   logs = result.logs || [];
@@ -1322,7 +1272,6 @@ async function refresh() {
   }
 }
 
-// ── Auto attach ──
 async function autoAttach() {
   try {
     const tabId = chrome.devtools.inspectedWindow.tabId;
@@ -1336,7 +1285,6 @@ async function autoAttach() {
   }
 }
 
-// ── Event listeners ──
 searchInput.addEventListener('input', renderList);
 filterMethod.addEventListener('change', renderList);
 filterStatus.addEventListener('change', renderList);
@@ -1365,14 +1313,12 @@ document.getElementById('attach').onclick = async () => {
   }
 };
 
-// ── Storage onChanged ──
 chrome.storage.onChanged.addListener((changes, ns) => {
   if (ns === 'local' && changes.logs && !ignoreStorageChange) {
     refresh();
   }
 });
 
-// ── Init ──
 (async function init() {
   await refresh();
   await autoAttach();

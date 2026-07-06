@@ -7,18 +7,12 @@
   <link rel="stylesheet" href="panel.css" />
 </head>
 <body>
-  <header id="toolbar">
+  <div id="search-bar">
     <div class="brand">
-      <a id="status-link" href="https://hangga.web.id/BrutuSuite" target="_blank">
-        <img width="150px" class="icon" src="icons/logo-light-prop-small.png"/>
+      <a id="status-link" href="https://hangga.web.id/brutusuite" target="_blank">
+        <img width="100px" class="icon" src="icons/logo-light-prop-small.png"/>
       </a>
     </div>
-    <div class="actions">
-      <button id="clear" class="btn primary">Clear</button>
-    </div>
-  </header>
-
-  <div id="search-bar">
     <span class="search-icon">🔍</span>
     <input id="search" type="text" placeholder="Filter by URL…" spellcheck="false" />
     <select id="filter-method">
@@ -40,6 +34,17 @@
     </select>
     <input id="filter-content" type="text" placeholder="Search in request/response…" spellcheck="false" />
     <span id="count-badge">0</span>
+    <div class="actions">
+      <select id="theme-select">
+        <option value="vscode-dark">VS Code Dark</option>
+        <option value="jetbrains-dark">JetBrains Dark</option>
+        <option value="one-dark">One Dark</option>
+        <option value="solarized-dark">Solarized Dark</option>
+        <option value="vscode-light">VS Code Light</option>
+        <option value="github-light">GitHub Light</option>
+      </select>
+      <button id="clear" class="btn primary">Clear</button>
+    </div>
   </div>
 
   <div id="split-view">
@@ -56,7 +61,6 @@
     <span id="status-count">0 requests</span>
   </footer>
 
-  <!-- PASTIKAN type="module" -->
   <script type="module" src="panel.js"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 import { logs, selectedId, editingId, sendingId, activeTab, activeSubTab,
          setSelectedId, setEditingId, setActiveTab, setActiveSubTab,
          logListEl, detailEmpty, detailContent, countBadge, statusText, statusCount,
+         expandedGroups, toggleGroup,  // <-- import tambahan
          MAX_LOGS } from './state.js';
 import { escapeHtml, formatOutput, statusClass, headersToArray, headersToObject, buildUrlWithParams } from './helpers.js';
 import { saveLogs } from './storage.js';
@@ -9,28 +10,87 @@ import { attachSubtabEvents } from './events.js';
 import { sendRequest, copyAsCurl } from './network.js';
 
 // ── Render list ──
+// ── Render list (grouped by hostname) ──
 export function renderList() {
   const filtered = filterLogs();
   countBadge.textContent = filtered.length;
   statusCount.textContent = `${filtered.length} request${filtered.length !== 1 ? 's' : ''}`;
 
-  logListEl.innerHTML = '';
-  filtered.forEach((log, idx) => {
-    const realIdx = logs.indexOf(log);
-    const entry = document.createElement('div');
-    const sc = statusClass(log.status);
-    entry.className = `log-entry ${sc}${selectedId === realIdx ? ' active' : ''}`;
-    if (log.note) entry.classList.add('has-note');
+  // Group by hostname
+  const groups = {};
+  filtered.forEach(log => {
+    let hostname = '';
+    try {
+      hostname = new URL(log.url).hostname;
+    } catch {
+      hostname = 'invalid';
+    }
+    if (!groups[hostname]) groups[hostname] = [];
+    groups[hostname].push(log);
+  });
 
-    entry.innerHTML = `
-      <span class="status ${sc}">${log.status}</span>
-      <span class="method">${log.method || 'GET'}</span>
-      <span class="url">${escapeHtml(log.url)}</span>
-      ${log.note ? `<span class="note-icon">📝</span>` : ''}
-      <span class="time">${log.time || ''}</span>
+  const sortedHostnames = Object.keys(groups).sort();
+
+  logListEl.innerHTML = '';
+  sortedHostnames.forEach(hostname => {
+    const groupLogs = groups[hostname];
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'log-group';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'group-header';
+    header.innerHTML = `
+      <span class="group-name">${escapeHtml(hostname)}</span>
+      <span class="group-count">(${groupLogs.length})</span>
+      <span class="group-toggle">▶</span>
     `;
-    entry.addEventListener('click', () => selectLog(realIdx));
-    logListEl.appendChild(entry);
+    header.addEventListener('click', () => {
+      const body = groupDiv.querySelector('.group-body');
+      const toggle = header.querySelector('.group-toggle');
+      const isExpanded = !body.classList.contains('collapsed');
+      if (isExpanded) {
+        body.classList.add('collapsed');
+        toggle.textContent = '▶';
+        expandedGroups.delete(hostname);  // simpan state
+      } else {
+        body.classList.remove('collapsed');
+        toggle.textContent = '▼';
+        expandedGroups.add(hostname);     // simpan state
+      }
+    });
+    groupDiv.appendChild(header);
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'group-body';
+    // Terapkan state expand dari memory
+    if (expandedGroups.has(hostname)) {
+      body.classList.remove('collapsed');
+      header.querySelector('.group-toggle').textContent = '▼';
+    } else {
+      body.classList.add('collapsed');
+      header.querySelector('.group-toggle').textContent = '▶';
+    }
+
+    groupLogs.forEach(log => {
+      const realIdx = logs.indexOf(log);
+      const entry = document.createElement('div');
+      const sc = statusClass(log.status);
+      entry.className = `log-entry ${sc}${selectedId === realIdx ? ' active' : ''}`;
+      if (log.note) entry.classList.add('has-note');
+      entry.innerHTML = `
+        <span class="status ${sc}">${log.status}</span>
+        <span class="method">${log.method || 'GET'}</span>
+        <span class="url">${escapeHtml(log.url)}</span>
+        ${log.note ? `<span class="note-icon">📝</span>` : ''}
+        <span class="time">${log.time || ''}</span>
+      `;
+      entry.addEventListener('click', () => selectLog(realIdx));
+      body.appendChild(entry);
+    });
+    groupDiv.appendChild(body);
+    logListEl.appendChild(groupDiv);
   });
 
   if (logs.length === 0) {

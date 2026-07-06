@@ -41,9 +41,9 @@ export function renderList() {
     const header = document.createElement('div');
     header.className = 'group-header';
     header.innerHTML = `
+      <span class="group-toggle">▶ </span>
       <span class="group-name">${escapeHtml(hostname)}</span>
       <span class="group-count">(${groupLogs.length})</span>
-      <span class="group-toggle">▶</span>
     `;
     header.addEventListener('click', () => {
       const body = groupDiv.querySelector('.group-body');
@@ -51,11 +51,11 @@ export function renderList() {
       const isExpanded = !body.classList.contains('collapsed');
       if (isExpanded) {
         body.classList.add('collapsed');
-        toggle.textContent = '▶';
+        toggle.textContent = '▶  ';
         expandedGroups.delete(hostname);  // simpan state
       } else {
         body.classList.remove('collapsed');
-        toggle.textContent = '▼';
+        toggle.textContent = '▼  ';
         expandedGroups.add(hostname);     // simpan state
       }
     });
@@ -67,10 +67,10 @@ export function renderList() {
     // Terapkan state expand dari memory
     if (expandedGroups.has(hostname)) {
       body.classList.remove('collapsed');
-      header.querySelector('.group-toggle').textContent = '▼';
+      header.querySelector('.group-toggle').textContent = '▼ ';
     } else {
       body.classList.add('collapsed');
-      header.querySelector('.group-toggle').textContent = '▶';
+      header.querySelector('.group-toggle').textContent = '▶ ';
     }
 
     groupLogs.forEach(log => {

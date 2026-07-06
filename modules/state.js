@@ -44,3 +44,7 @@ export function toggleGroup(hostname) {
 export function isGroupExpanded(hostname) {
   return expandedGroups.has(hostname);
 }
+
+// ── State untuk tema ──
+export let theme = 'theme-jetbrains';
+export function setTheme(t) { theme = t; }

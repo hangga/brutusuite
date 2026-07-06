@@ -10,6 +10,7 @@ import { filterLogs } from './modules/filter.js';
 import { renderList, renderDetail } from './modules/render.js';
 import { startCapture } from './modules/network.js';
 import { refresh } from './modules/refresh.js';
+import { theme, setTheme } from './modules/state.js';
 
 // ── Resize divider ──
 let isDragging = false;
@@ -60,7 +61,35 @@ chrome.storage.onChanged.addListener((changes, ns) => {
 // ── INIT ──
 (async function init() {
   await refresh();
+  await loadTheme();
   startCapture();
   statusText.textContent = 'Listening…';
   console.log('[BrutuSuite] Panel siap, menunggu request...');
 })();
+
+// ── Tema ──
+const themeSelect = document.getElementById('theme-select');
+
+function applyTheme(themeName) {
+  document.body.className = 'theme-' + themeName;
+  themeSelect.value = themeName;
+}
+
+async function loadTheme() {
+  const result = await chrome.storage.local.get('theme');
+  const saved = result.theme || 'vscode-dark';
+  setTheme(saved);
+  applyTheme(saved);
+}
+
+async function saveTheme(themeName) {
+  await chrome.storage.local.set({ theme: themeName });
+}
+
+// Event listener untuk ganti tema
+themeSelect.addEventListener('change', async (e) => {
+  const newTheme = e.target.value;
+  setTheme(newTheme);
+  applyTheme(newTheme);
+  await saveTheme(newTheme);
+});

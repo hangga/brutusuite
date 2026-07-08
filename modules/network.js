@@ -52,8 +52,6 @@ function detectBodyInfo(postData, headers) {
 
 // ── CAPTURE REQUEST ──
 export function startCapture() {
-  console.log('[BrutuSuite] Memulai capture via chrome.devtools.network');
-
   chrome.devtools.network.onRequestFinished.addListener(async (request) => {
     // console.log('[BrutuSuite] Request tertangkap:', request.request.url, 'type:', request.type);
 
@@ -76,8 +74,6 @@ export function startCapture() {
       console.warn('[BrutuSuite] Gagal ambil response body:', e);
       responseBody = '';
     }
-
-    console.log('CEK responseBody ---------> ', responseBody);
 
     const respHeaders = {};
     request.response.headers.forEach(h => { respHeaders[h.name] = h.value; });
@@ -189,8 +185,6 @@ export async function sendRequest(idx) {
   if (method === 'GET' || method === 'HEAD') delete fetchOptions.body;
   fetchOptions.headers = headers;
   url = ensureValidUrl(url);
-
-  console.log('[BrutuSuite] Sending:', { url, method, headers, body: fetchOptions.body });
 
   setSendingId(idx);
   delete log.sendStatus;

@@ -77,29 +77,29 @@ BrutuSuite keeps everything inside Chrome DevTools.
 Instead of:
 
 ```
-Browser
-↓
-Copy Request
-↓
-Open Postman
-↓
-Import
-↓
-Edit
-↓
-Send
+                    Browser
+                    ↓
+                    Copy Request
+                    ↓
+                    Open Postman
+                    ↓
+                    Import
+                    ↓
+                    Edit
+                    ↓
+                    Send
 ```
 
 You simply:
 
 ```
-Chrome DevTools
-↓
-Inspect
-↓
-Edit
-↓
-Replay
+                    Chrome DevTools
+                    ↓
+                    Inspect
+                    ↓
+                    Edit
+                    ↓
+                    Replay
 ```
 
 No context switching.
@@ -147,26 +147,26 @@ A new **BrutuSuite** tab will appear.
 # Project Structure
 
 ```
-BrutuSuite
-│
-├── manifest.json
-├── panel.html
-├── panel.css
-├── panel.js
-├── devtools.html
-├── devtools.js
-│
-├── icons/
-│
-└── modules/
-    ├── state.js
-    ├── helpers.js
-    ├── storage.js
-    ├── filter.js
-    ├── render.js
-    ├── events.js
-    ├── network.js
-    └── refresh.js
+                    BrutuSuite
+                    │
+                    ├── manifest.json
+                    ├── panel.html
+                    ├── panel.css
+                    ├── panel.js
+                    ├── devtools.html
+                    ├── devtools.js
+                    │
+                    ├── icons/
+                    │
+                    └── modules/
+                        ├── state.js
+                        ├── helpers.js
+                        ├── storage.js
+                        ├── filter.js
+                        ├── render.js
+                        ├── events.js
+                        ├── network.js
+                        └── refresh.js
 ```
 
 ---
@@ -174,152 +174,39 @@ BrutuSuite
 # Architecture
 
 ```
-panel.js
-    │
-    ├──────────────┐
-    │              │
-state.js      storage.js
-    │              │
-    ├──────────────┘
-    │
-filter.js
-    │
-render.js
-    │
-events.js
-    │
-network.js
-    │
-refresh.js
+                    panel.js
+                        │
+                        ├──────────────┐
+                        │              │
+                    state.js      storage.js
+                        │              │
+                        ├──────────────┘
+                        │
+                    filter.js
+                        │
+                    render.js
+                        │
+                    events.js
+                        │
+                    network.js
+                        │
+                    refresh.js
 ```
-
----
-
-# Module Responsibilities
-
-## panel.js
-
-Application entry point.
-
-Responsible for initializing the panel and connecting every module.
-
----
-
-## state.js
-
-Stores application state.
-
-Examples
-
-- logs
-- selected request
-- active tabs
-- expanded groups
-- DOM references
-
----
-
-## storage.js
-
-Handles persistence using
-
-```
-chrome.storage.local
-```
-
-Functions
-
-- saveLogs()
-- loadLogs()
-
----
-
-## filter.js
-
-Responsible for filtering requests.
-
-Supports searching by
-
-- URL
-- Method
-- Status
-
----
-
-## render.js
-
-Responsible for rendering the interface.
-
-Includes
-
-- Request list
-- Detail panel
-- Request editor
-- Response viewer
-- Params
-- Headers
-- Body
-- Authentication
-
----
-
-## events.js
-
-Contains UI event handlers.
-
-Examples
-
-- editing headers
-- editing parameters
-- editing form data
-- updating URL preview
-
----
-
-## network.js
-
-Handles network-related operations.
-
-Includes
-
-- request capture
-- send request
-- replay request
-- Copy as cURL
-- body parsing
-
----
-
-## refresh.js
-
-Keeps the UI synchronized after changes.
 
 ---
 
 # Current Capabilities
 
 ✅ Capture requests
-
 ✅ Replay requests
-
 ✅ Edit requests
-
 ✅ Copy as cURL
-
 ✅ Query parameter editor
-
 ✅ Header editor
-
 ✅ JSON formatter
-
 ✅ Form-data editor
-
 ✅ URL encoded editor
-
-✅ Authentication editor
-
 ✅ Notes
-
 ✅ Request grouping
 
 ---

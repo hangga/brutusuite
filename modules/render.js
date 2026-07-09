@@ -3,7 +3,7 @@ import { logs, selectedId, editingId, sendingId, activeTab, activeSubTab,
          logListContainer, detailEmpty, detailContent, countBadge, statusText, statusCount,
          expandedGroups, toggleGroup,
          MAX_LOGS } from './state.js';
-import { escapeHtml, formatOutput, statusClass, headersToArray, headersToObject, buildUrlWithParams, bodyToJson } from './helpers.js';
+import { escapeHtml, formatOutput, statusClass, headersToArray, headersToObject, buildUrlWithParams, bodyToJson, formatOutputPlain, highlightText } from './helpers.js';
 import { saveLogs } from './storage.js';
 import { filterLogs } from './filter.js';
 import { attachSubtabEvents } from './events.js';
@@ -143,6 +143,17 @@ export function renderDetail(idx) {
 
   let html = '';
 
+  html += `<style>
+  .highlight { background-color: #ff0; color: #000; }
+  .highlight.active { background-color: #ff9632; }
+  .response-search-wrap { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .response-search-wrap input { flex: 1; padding: 4px 8px; }
+  .search-nav { padding: 4px 8px; cursor: pointer; }
+  </style>`;
+
+// Siapkan teks response yang sudah diformat (plain)
+const formattedText = log.response ? formatOutputPlain(log.response) : '';
+
   // ── ACTIONS ──
   html += `<div class="detail-actions">`;
   html += `<button class="btn btn-send" id="action-send" ${isSending ? 'disabled' : ''}>
@@ -210,7 +221,19 @@ export function renderDetail(idx) {
     if (respHeaders.length) respHeaders.forEach(h => html += `<div class="rh-row"><span class="rh-key">${escapeHtml(h.key)}</span><span class="rh-value">${escapeHtml(h.value)}</span></div>`);
     else html += `<div style="padding:6px 10px;color:#666;font-style:italic;">(no headers)</div>`;
     html += `</div></div>`;
-    html += `<div class="response-body"><label>Response Body</label><div class="rb-content">${log.response ? formatOutput(log.response) : '<span class="empty-hint">(empty)</span>'}</div></div>`;
+    
+    const highlightedBody = highlightText(formattedText, '');
+
+    html += `<div class="response-body">
+      <label>Response Body</label>
+      <div class="response-search-wrap" id="search-bar">
+        <input type="text" id="response-search" placeholder="Search in response..." />
+        <span id="response-search-count"></span>
+        <button id="response-search-prev" class="search-nav">◀</button>
+        <button id="response-search-next" class="search-nav">▶</button>
+      </div>
+      <div class="rb-content" id="response-body-content">${highlightedBody}</div>
+    </div>`;
   } else {
     html += `<div style="color:#666;padding:20px 0;text-align:center;font-style:italic;">No response yet</div>`;
   }
@@ -249,6 +272,61 @@ export function renderDetail(idx) {
 
   // Selalu pasang event untuk subtab (update log saat input berubah)
   attachSubtabEvents(idx);
+
+  // ── Response body search ──
+  const searchInputResp = document.getElementById('response-search');
+  const searchCountResp = document.getElementById('response-search-count');
+  const rbContent = document.getElementById('response-body-content');
+  const prevBtnResp = document.getElementById('response-search-prev');
+  const nextBtnResp = document.getElementById('response-search-next');
+
+  let currentKeyword = '';
+  let currentMatches = [];
+  let currentMatchIndex = -1;
+
+  function updateHighlight(keyword) {
+    currentKeyword = keyword;
+    const highlighted = highlightText(formattedText, keyword);
+    rbContent.innerHTML = highlighted;
+    const matches = rbContent.querySelectorAll('.highlight');
+    currentMatches = Array.from(matches);
+    currentMatchIndex = -1;
+    if (currentMatches.length > 0) {
+      searchCountResp.textContent = `${currentMatches.length} matches`;
+      currentMatchIndex = 0;
+      currentMatches[0].classList.add('active');
+      currentMatches[0].scrollIntoView({ block: 'center' });
+    } else {
+      searchCountResp.textContent = 'No matches';
+    }
+  }
+
+  if (searchInputResp) {
+    searchInputResp.addEventListener('input', (e) => {
+      const keyword = e.target.value.trim();
+      updateHighlight(keyword);
+    });
+  }
+  if (prevBtnResp) {
+    prevBtnResp.addEventListener('click', () => {
+      if (currentMatches.length === 0) return;
+      currentMatches[currentMatchIndex]?.classList.remove('active');
+      currentMatchIndex = (currentMatchIndex - 1 + currentMatches.length) % currentMatches.length;
+      currentMatches[currentMatchIndex].classList.add('active');
+      currentMatches[currentMatchIndex].scrollIntoView({ block: 'center' });
+    });
+  }
+  if (nextBtnResp) {
+    nextBtnResp.addEventListener('click', () => {
+      if (currentMatches.length === 0) return;
+      currentMatches[currentMatchIndex]?.classList.remove('active');
+      currentMatchIndex = (currentMatchIndex + 1) % currentMatches.length;
+      currentMatches[currentMatchIndex].classList.add('active');
+      currentMatches[currentMatchIndex].scrollIntoView({ block: 'center' });
+    });
+  }
+  // Inisialisasi (tanpa keyword)
+  updateHighlight('');
 }
 
 export function renderParamsSubtab(log) {

@@ -112,33 +112,17 @@ Just faster debugging.
 
 # Installation
 
-Clone the repository
+1. Clone the repository
 
-```bash
-git clone https://github.com/hangga/brutusuite.git
-```
+    ```bash
+    git clone https://github.com/hangga/brutusuite.git
+    ```
 
-Open Chrome Extensions
-
-```
-chrome://extensions
-```
-
-Enable
-
-```
-Developer Mode
-```
-
-Click
-
-```
-Load unpacked
-```
-
-Select the project directory.
-
-Open DevTools.
+2. Open Chrome Extensions
+3. Enable Developer Mode
+4. Click Load unpacked. 
+5. Select the project directory.
+6. Open DevTools.
 
 A new **BrutuSuite** tab will appear.
 

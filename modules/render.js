@@ -169,7 +169,7 @@ export function renderDetail(idx) {
     <div class="url-wrap"><input type="text" id="edit-url" value="${escapeHtml(log.url)}" /></div>`;
   
   // ── ACTIONS ──
-  // html += `<div class="detail-actions">`;
+  html += `<div style="width:300px;">`;
   html += `<button class="btn btn-send" id="action-send" ${isSending ? 'disabled' : ''}>
     ${isSending ? '⏳ Sending...' : '▶ Send'}
   </button>`;
@@ -181,7 +181,7 @@ export function renderDetail(idx) {
     const cls = log.sendStatus === 'success' ? 'success' : 'error';
     html += `<div class="send-status ${cls}">${label}</div>`;
   }
-  // html += `</div>`;
+  html += `</div>`;
   
   html +=`
   </div>`;
@@ -216,7 +216,7 @@ export function renderDetail(idx) {
     
     // ── Response Headers (expandable) ──
     html += `<div class="response-headers">
-      <label style="display:flex;" id="headers-toggle">
+      <label style="display:flex; cursor: pointer;" id="headers-toggle">
         <span>Response Headers</span>
         <span id="headers-toggle-icon">▶</span>
       </label>
@@ -234,7 +234,7 @@ export function renderDetail(idx) {
     html += `<div class="response-body">
       <label>Response Body</label>
       <div class="response-search-wrap" id="search-bar">
-        <input type="text" id="response-search" placeholder="Search in response..." />
+        <input type="text" id="response-search" placeholder="Search in body response..." />
         <span id="response-search-count"></span>
         <button id="response-search-prev" class="search-nav">◀</button>
         <button id="response-search-next" class="search-nav">▶</button>

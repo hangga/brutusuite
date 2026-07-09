@@ -6,7 +6,7 @@
 
 <p align="center">
 
-![Version](https://img.shields.io/badge/version-1.3-blue)
+![Version](https://img.shields.io/badge/version-1.4-blue)
 ![Manifest](https://img.shields.io/badge/Manifest-V3-orange)
 ![Chrome](https://img.shields.io/badge/Chrome-DevTools-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -21,7 +21,7 @@ Designed for developers, QA engineers, penetration testers, and bug bounty hunte
 
 ## Preview
 
-[![Demo](preview.gif)](https://github.com/user-attachments/assets/f1d04663-022e-4385-9243-9cd3e7988e11)
+[![Demo](preview.gif)](https://github.com/user-attachments/assets/ed3c7c29-96d2-4f76-9002-273b80564f0c)
 
 ---
 

@@ -41,6 +41,11 @@ filterStatus.addEventListener('change', renderList);
 filterContent.addEventListener('input', renderList);
 
 document.getElementById('clear').onclick = async () => {
+  const confirmed = await customConfirm(
+    'Are you sure you want to clear all logs?\n\nThis action cannot be undone.'
+  );
+
+  if (!confirmed) return;
   setLogs([]);
   setSelectedId(null);
   setEditingId(null);
@@ -153,6 +158,44 @@ document.getElementById('reload-btn').addEventListener('click', () => {
         ignoreCache: true
     });
 });
+
+function customConfirm(message) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirmModal');
+    const msgEl = document.getElementById('confirmMessage');
+    const yesBtn = document.getElementById('confirmYes');
+    const noBtn = document.getElementById('confirmNo');
+
+    msgEl.textContent = message;
+    modal.style.display = 'flex';
+
+    const cleanup = () => {
+      yesBtn.onclick = null;
+      noBtn.onclick = null;
+      modal.onclick = null;
+    };
+
+    yesBtn.onclick = () => {
+      cleanup();
+      modal.style.display = 'none';
+      resolve(true);
+    };
+
+    noBtn.onclick = () => {
+      cleanup();
+      modal.style.display = 'none';
+      resolve(false);
+    };
+
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        cleanup();
+        modal.style.display = 'none';
+        resolve(false);
+      }
+    };
+  });
+}
 
 // Panggil setelah DOM siap
 initCaptureFilter();

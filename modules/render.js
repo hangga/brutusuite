@@ -144,8 +144,8 @@ export function renderDetail(idx) {
   let html = '';
 
   html += `<style>
-  .highlight { background-color: #ff0; color: #000; }
-  .highlight.active { background-color: #ff9632; }
+  .highlight { background-color: rgb(255, 255, 104); color: #000; }
+  .highlight.active { background-color: #ff9028; }
   .response-search-wrap { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
   .response-search-wrap input { flex: 1; padding: 4px 8px; }
   .search-nav { padding: 4px 8px; cursor: pointer; }

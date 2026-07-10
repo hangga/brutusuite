@@ -1327,6 +1327,14 @@ body {
     padding: 2px;
 }
 
+.btn-icon {
+    filter: invert(1);
+    fill: var(--bg-primary);
+    width: 22px;
+    height: 22px;
+    padding: 2px;
+}
+
 .search-nav{
   height: 28px;
   background: var(--accent);
@@ -2454,4 +2462,11 @@ body {
     border-radius: 4px;
     background: var(--surface-secondary);
     user-select: none;
+}
+
+#confirmModal {
+  font-family: Arial, sans-serif;
+}
+#confirmModal button:hover {
+  opacity: 0.8;
 }

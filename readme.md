@@ -95,9 +95,13 @@ BrutuSuite keeps everything inside Chrome DevTools.
 Instead of:
 
 ```
-                  Browser
+                 Browser
                     ↓
-                Copy Request
+                Copy Url
+                    ↓
+                Copy Param
+                    ↓
+                Copy Header
                     ↓
                 Open Postman
                     ↓
@@ -131,7 +135,7 @@ Just faster debugging.
 # Project Structure
 
 ```
-                    BrutuSuite
+                BrutuSuite
                     │
                     ├── manifest.json
                     ├── panel.html
@@ -179,34 +183,12 @@ Just faster debugging.
 
 ---
 
-# Current Capabilities
-
-✅ Capture requests
-✅ Replay requests
-✅ Edit requests
-✅ Copy as cURL
-✅ Query parameter editor
-✅ Header editor
-✅ JSON formatter
-✅ Form-data editor
-✅ URL encoded editor
-✅ Notes
-✅ Request grouping
-
----
-
 # Built With
 
 - Vanilla JavaScript
 - Chrome DevTools API
 - Chrome Storage API
 - Fetch API
-
-No frameworks.
-
-No build tools.
-
-No runtime dependencies.
 
 ---
 

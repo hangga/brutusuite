@@ -19,6 +19,24 @@ Designed for developers, QA engineers, penetration testers, and bug bounty hunte
 
 ---
 
+# Installation
+
+1. Clone the repository
+
+    ```bash
+    git clone https://github.com/hangga/brutusuite.git
+    ```
+
+2. Open Chrome Extensions
+3. Enable Developer Mode
+4. Click Load unpacked. 
+5. Select the project directory.
+6. Open DevTools.
+
+A new **BrutuSuite** tab will appear.
+
+---
+
 ## Preview
 
 [![Demo](preview.gif)](https://github.com/user-attachments/assets/ed3c7c29-96d2-4f76-9002-273b80564f0c)
@@ -107,24 +125,6 @@ No context switching.
 No import/export.
 
 Just faster debugging.
-
----
-
-# Installation
-
-1. Clone the repository
-
-    ```bash
-    git clone https://github.com/hangga/brutusuite.git
-    ```
-
-2. Open Chrome Extensions
-3. Enable Developer Mode
-4. Click Load unpacked. 
-5. Select the project directory.
-6. Open DevTools.
-
-A new **BrutuSuite** tab will appear.
 
 ---
 

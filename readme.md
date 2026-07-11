@@ -4,22 +4,55 @@
   <img src="logo-dark.png" width="320" alt="BrutuSuite Logo">
 </p>
 
-<p align="center">
+# BrutuSuite
 
 ![Version](https://img.shields.io/badge/version-1.4-blue)
 ![Manifest](https://img.shields.io/badge/Manifest-V3-orange)
 ![Chrome](https://img.shields.io/badge/Chrome-DevTools-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-</p>
 
-**BrutuSuite** is a lightweight Chrome DevTools extension for inspecting, modifying, and replaying HTTP requests without leaving the browser.
+**Capture. Edit. Replay. Right inside Chrome DevTools.**
 
-Designed for developers, QA engineers, penetration testers, and bug bounty hunters, BrutuSuite brings API debugging directly into Chrome DevTools with a familiar workflow inspired by tools like Burp Suite and Postman.
+BrutuSuite is a lightweight alternative for the capture-and-replay workflow you might use Burp Suite for — without setting up a proxy.
 
----
+Open Chrome DevTools, capture requests from the page you're testing, edit them, and replay instantly.
 
-# Installation
+Think **Burp-style request replay with a Postman-like UI**, built directly into your browser.
+
+[![Demo](preview.gif)](https://github.com/user-attachments/assets/ed3c7c29-96d2-4f76-9002-273b80564f0c)
+
+## Features
+
+* Capture API requests or all URLs
+* Edit methods, parameters, headers, and request bodies
+* Replay requests instantly
+* Filter by keyword, request method, or response status
+* Custom capture filters to skip images, CSS, and other static resources
+* Search inside response bodies
+* Copy requests as cURL
+* Save your work to a file
+* 18 light and dark themes
+
+## A Shorter Workflow
+
+| Postman                     | Burp Suite          | BrutuSuite           |
+| --------------------------- | ------------------- | -------------------- |
+| Open browser                | Open browser        | Open browser         |
+| Inspect Network → XHR/Fetch | Open Burp Suite     | Inspect → BrutuSuite |
+| Copy request data           | Capture / intercept | Edit request         |
+| Open Postman                | Edit request        | Send request         |
+| Build / import request      | Send request        |                      |
+| Edit request                |                     |                      |
+| Send request                |                     |                      |
+
+BrutuSuite keeps the workflow where the request already happens: **inside your browser**.
+
+## Try It
+
+Install BrutuSuite, open Chrome DevTools, and start capturing.
+
+## Installation
 
 1. Clone the repository
 
@@ -35,213 +68,7 @@ Designed for developers, QA engineers, penetration testers, and bug bounty hunte
 
 A new **BrutuSuite** tab will appear.
 
----
-
-## Preview
-
-[![Demo](preview.gif)](https://github.com/user-attachments/assets/ed3c7c29-96d2-4f76-9002-273b80564f0c)
-
----
-
-# Features
-
-### Network Inspection
-
-- Capture XHR and Fetch requests
-- Inspect request and response headers
-- Pretty-print JSON responses
-- View response body
-- View request body
-- Group requests by hostname
-- Search captured requests
-- Filter requests quickly
-
-### Request Editing
-
-- Edit URL
-- Edit HTTP method
-- Edit query parameters
-- Edit request headers
-- Edit request body
-- Support JSON
-- Support raw text
-- Support multipart/form-data
-- Support x-www-form-urlencoded
-
-### Authentication
-
-- No Authentication
-- Basic Authentication
-- Bearer Token
-- OAuth 2.0
-
-### Productivity
-
-- Copy as cURL
-- Request notes
-- Live URL preview
-- Persistent request history
-- Auto save using chrome.storage
-- Dark & Light themes
-
----
-
-# Why BrutuSuite?
-
-Most API tools require switching between the browser and another application.
-
-BrutuSuite keeps everything inside Chrome DevTools.
-
-Instead of:
-
-```
-                 Browser
-                    ↓
-                Copy Url
-                    ↓
-                Copy Param
-                    ↓
-                Copy Header
-                    ↓
-                Open Postman
-                    ↓
-                  Import
-                    ↓
-                   Edit
-                    ↓
-                   Send
-```
-
-You simply:
-
-```
-               Chrome DevTools
-                    ↓
-                  Inspect
-                    ↓
-                   Edit
-                    ↓
-                   Replay
-```
-
-No context switching.
-
-No import/export.
-
-Just faster debugging.
-
----
-
-# Project Structure
-
-```
-                BrutuSuite
-                    │
-                    ├── manifest.json
-                    ├── panel.html
-                    ├── panel.css
-                    ├── panel.js
-                    ├── devtools.html
-                    ├── devtools.js
-                    │
-                    ├── icons/
-                    │
-                    └── modules/
-                        ├── state.js
-                        ├── helpers.js
-                        ├── storage.js
-                        ├── filter.js
-                        ├── render.js
-                        ├── events.js
-                        ├── network.js
-                        └── refresh.js
-```
-
----
-
-# Architecture
-
-```
-                    panel.js
-                        │
-                        ├──────────────┐
-                        │              │
-                    state.js      storage.js
-                        │              │
-                        ├──────────────┘
-                        │
-                    filter.js
-                        │
-                    render.js
-                        │
-                    events.js
-                        │
-                    network.js
-                        │
-                    refresh.js
-```
-
----
-
-# Built With
-
-- Vanilla JavaScript
-- Chrome DevTools API
-- Chrome Storage API
-- Fetch API
-
----
-
-# Contributing
-
-Pull requests are welcome.
-
-If you'd like to improve BrutuSuite:
-
-1. Fork the repository
-
-2. Create a feature branch
-
-```bash
-git checkout -b feature/my-feature
-```
-
-3. Commit your changes
-
-```bash
-git commit -m "Add awesome feature"
-```
-
-4. Push
-
-```bash
-git push origin feature/my-feature
-```
-
-5. Open a Pull Request
-
----
-
-# License
-
-MIT License
-
----
-
-# Inspiration
-
-BrutuSuite is inspired by tools such as
-
-- Burp Suite
-- Postman
-- Insomnia
-
-while keeping the workflow native to Chrome DevTools.
-
----
-
 <p align="center">
 
 Made with ❤️ by Hangga Aji Sayekti
-
 </p>

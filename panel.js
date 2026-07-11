@@ -4,7 +4,6 @@ import { logs, selectedId, editingId, sendingId, activeTab, activeSubTab,
          setActiveTab, setActiveSubTab, ignoreStorageChange, setIgnoreStorageChange,
          logListEl, detailEmpty, detailContent, searchInput, filterMethod,
          filterStatus, 
-        //  filterContent, 
          countBadge, statusText, statusCount,
          divider, MAX_LOGS } from './modules/state.js';
 import { loadLogs, saveLogs, loadCaptureFilter, saveCaptureFilter } from './modules/storage.js';

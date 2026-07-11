@@ -60,13 +60,12 @@ Install BrutuSuite, open Chrome DevTools, and start capturing.
     git clone https://github.com/hangga/brutusuite.git
     ```
 
-2. Open Chrome Extensions
+2. Open Chrome Extensions → Developer Mode (Enable)
    <p align="left">
     <img src="chrome-extension.png" width="500"/>
    </p>
-3. Enable Developer Mode
-4. Click Load unpacked. 
-5. Select the project directory.
+3. Click Load unpacked. 
+4. Select the **brutusuite** directory.
 
 A new **BrutuSuite** tab will appear.
 

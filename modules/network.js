@@ -1,6 +1,6 @@
-import { logs, selectedId, 
-        // editingId, 
-        sendingId, activeTab, setSendingId, setSelectedId, setActiveTab, statusText, captureFilter } from './state.js';
+import { logs, selectedId, sendingId, activeTab, setSendingId, setSelectedId, setActiveTab, statusText, captureFilter,
+          abortController, cancelRequested, timeoutId, timeoutMs,
+          setAbortController, setCancelRequested, setTimeoutId } from './state.js';
 import { escapeHtml, headersToObject, ensureValidUrl, cleanHeaders, detectCategory } from './helpers.js';
 import { saveLogs } from './storage.js';
 import { renderList, renderDetail } from './render.js';
@@ -130,6 +130,15 @@ function detectBodyInfo(postData, headers) {
   }
 
   return { bodyMode: mode, bodyRawType: rawType, formDataFields: formFields, requestBody };
+}
+
+// ── Cancel request ──
+export function cancelRequest(idx) {
+  if (sendingId !== idx) return;
+  if (!abortController) return;
+  setCancelRequested(true);
+  abortController.abort();
+  statusText.textContent = 'Canceling…';
 }
 
 // ── CAPTURE REQUEST ──
@@ -388,6 +397,19 @@ export async function sendRequest(idx) {
   fetchOptions.headers = headers;
   url = ensureValidUrl(url);
 
+  // Buat AbortController dan simpan di state
+  const controller = new AbortController();
+  setAbortController(controller);
+  setCancelRequested(false);
+  let isTimeout = false;
+
+  // Atur timeout
+  const tid = setTimeout(() => {
+    isTimeout = true;
+    controller.abort();
+  }, timeoutMs);
+  setTimeoutId(tid);
+
   setSendingId(idx);
   delete logs[idx]?.sendStatus;
   renderDetail(idx);
@@ -426,12 +448,48 @@ export async function sendRequest(idx) {
     renderDetail(idx);
     statusText.textContent = `Sent (${response.status}) in ${elapsed}ms`;
   } catch (err) {
+
+    // Bersihkan timeout jika belum terjadi
+    clearTimeout(timeoutId);
+    setTimeoutId(null);
+
+    let sendStatus = 'error';
+    let sendError = err.message;
+
+    if (err.name === 'AbortError') {
+      if (cancelRequested) {
+        sendStatus = 'canceled';
+        sendError = 'Request canceled by user';
+      } else if (isTimeout) {
+        sendStatus = 'timeout';
+        sendError = 'Request timed out';
+      } else {
+        sendStatus = 'error';
+        sendError = 'Request aborted';
+      }
+    } else {
+      sendStatus = 'error';
+      sendError = err.message;
+    }
+
     logs[idx] = { ...logs[idx], sendStatus: 'error', sendError: err.message };
     await saveLogs();
     setSendingId(null);
+    setAbortController(null);
+    setCancelRequested(false);
     renderDetail(idx);
-    statusText.textContent = `❌ Error: ${err.message}`;
+    statusText.textContent = `❌ ${sendError}`;
     console.error('[BrutuSuite] Send error:', err);
+  } finally {
+    // Pastikan cleanup
+    clearTimeout(timeoutId);
+    setTimeoutId(null);
+    setAbortController(null);
+    setCancelRequested(false);
+    if (sendingId === idx) {
+      setSendingId(null);
+    }
+    renderList();
   }
 }
 

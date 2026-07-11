@@ -8,7 +8,7 @@ import { escapeHtml, formatOutput, statusClass, headersToArray, headersToObject,
 import { saveLogs } from './storage.js';
 import { filterLogs } from './filter.js';
 import { attachSubtabEvents } from './events.js';
-import { sendRequest, copyAsCurl } from './network.js';
+import { sendRequest, copyAsCurl, cancelRequest } from './network.js';
 
 // ── Render list (grouped by hostname) ──
 export function renderList() {
@@ -160,21 +160,38 @@ export function renderDetail(idx) {
     <div class="url-wrap"><input type="text" id="edit-url" value="${escapeHtml(log.url)}" /></div>`;
   
   // ── ACTIONS ──
-  html += `<div style="width:300px;">`;
+  html += `<div style="width:300px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">`;
   html += `<button class="btn btn-send" id="action-send" ${isSending ? 'disabled' : ''}>
     ${isSending ? '⏳ Sending...' : '▶ Send'}
   </button>`;
+  if (isSending) {
+    html += `<button class="btn btn-cancel" id="action-cancel">✕ Cancel</button>`;
+  }
   html += `<button class="btn btn-copy" id="action-copy">📋 Copy cURL</button>`;
+  html += `</div>`;
+
+  // Status setelah send
   if (isSending) {
     html += `<div class="send-status sending"><span class="spinner"></span> Sending...</div>`;
   } else if (log.sendStatus) {
-    const label = log.sendStatus === 'success' ? '✅ Sent' : '❌ Failed';
-    const cls = log.sendStatus === 'success' ? 'success' : 'error';
+    let label, cls;
+    if (log.sendStatus === 'success') {
+      label = '✅ Sent';
+      cls = 'success';
+    } else if (log.sendStatus === 'timeout') {
+      label = '⏱ Timeout';
+      cls = 'timeout';
+    } else if (log.sendStatus === 'canceled') {
+      label = '✕ Canceled';
+      cls = 'canceled';
+    } else {
+      label = '❌ Failed';
+      cls = 'error';
+    }
     html += `<div class="send-status ${cls}">${label}</div>`;
   }
-  html += `</div>`;
   
-  html +=`
+  html += `
   </div>`;
 
   // ── Sub-tabs (selalu ditampilkan) ──
@@ -293,6 +310,10 @@ export function renderDetail(idx) {
   // Tombol Send
   const sendBtn = detailContent.querySelector('#action-send');
   if (sendBtn) sendBtn.addEventListener('click', () => sendRequest(idx));
+
+  // Tombol Cancel
+  const cancelBtn = detailContent.querySelector('#action-cancel');
+  if (cancelBtn) cancelBtn.addEventListener('click', () => cancelRequest(idx));
 
   // Tombol Copy cURL
   const copyBtn = detailContent.querySelector('#action-copy');

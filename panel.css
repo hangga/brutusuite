@@ -2533,3 +2533,17 @@ body {
 #response-search-count {
     white-space: nowrap;
 }
+
+.send-status.timeout {
+  color: #f39c12;
+}
+.send-status.canceled {
+  color: #e67e22;
+}
+.btn-cancel {
+  background: #e74c3c;
+  color: #fff;
+}
+.btn-cancel:hover {
+  background: #c0392b;
+}

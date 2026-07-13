@@ -1488,7 +1488,7 @@ body {
   display: flex;
   align-items: center;
   /* padding: 5px 10px 4px 10px; */
-  padding: 1px;
+  padding: 6px;
   /* background: linear-gradient(90deg, var(--badge-bg), var(--accent)); */
   border-bottom: 1px solid var(--border-color);
   gap: 2px;

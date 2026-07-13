@@ -1685,7 +1685,7 @@ body {
 
 /* ── LOG ENTRY ── */
 .log-entry {
-  margin-left: 10px;
+  /* margin-left: 10px; */
   background: var(--bg-log-entry);
   border-radius: 4px;
   margin-bottom: 1px;

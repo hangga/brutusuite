@@ -1559,15 +1559,27 @@ body {
 /* ── LOG LIST ── */
 #log-list {
   width: 30%;
-  overflow-y: auto;
+  /* overflow-y: auto; */
   /* padding: 8px 8px 8px 12px; */
   background: var(--bg-log-list);
   flex-shrink: 0;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
-#log-list-container{
-  /* border-top: 1px solid var(--border-color); */
-  /* margin-top: 10px; */
+#custom-filters,
+#files {
+  flex-shrink: 0;
+}
+
+#log-list-container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding-top: 10px;
 }
 
@@ -1685,7 +1697,6 @@ body {
 
 /* ── LOG ENTRY ── */
 .log-entry {
-  /* margin-left: 10px; */
   background: var(--bg-log-entry);
   border-radius: 4px;
   margin-bottom: 1px;
@@ -1693,7 +1704,7 @@ body {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   transition: background 0.1s;
   border-left: 2px solid transparent;
 }

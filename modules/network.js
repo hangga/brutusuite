@@ -303,6 +303,8 @@ export function startCapture() {
     logs.unshift(log);
     if (logs.length > 200) logs.pop();
     await saveLogs();
+    console.log('log.responseBody.length =======> ', log.responseBody? log.responseBody.length : '');
+    console.log('logs.length =======> ', logs.length);
     renderList();
 
     // if (selectedId === null) {

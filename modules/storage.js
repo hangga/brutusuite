@@ -3,7 +3,7 @@ import { logs, setLogs, ignoreStorageChange, setIgnoreStorageChange } from './st
 
 const STORAGE_KEY = 'WebSlurp_logs';
 const SETTINGS_KEY = 'WebSlurp_settings';
-const MAX_SAVED_LOGS = 2000; // atau 3000
+const MAX_SAVED_LOGS = 200; // atau 3000
 
 // export async function saveLogs() {
 //   setIgnoreStorageChange(true);

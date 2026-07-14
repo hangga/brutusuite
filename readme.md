@@ -1,10 +1,10 @@
-# BrutuSuite
+# WebSlurp
 
 <p align="center">
-  <img src="logo-dark.png" width="320" alt="BrutuSuite Logo">
+  <img src="logo-dark.png" width="320" alt="WebSlurp Logo">
 </p>
 
-# BrutuSuite
+# WebSlurp
 
 ![Version](https://img.shields.io/badge/version-1.4-blue)
 ![Manifest](https://img.shields.io/badge/Manifest-V3-orange)
@@ -14,7 +14,7 @@
 
 **Capture. Edit. Replay. Right inside Chrome DevTools.**
 
-BrutuSuite is a lightweight alternative for the capture-and-replay workflow you might use Burp Suite for — without setting up a proxy.
+WebSlurp is a lightweight alternative for the capture-and-replay workflow you might use Burp Suite for — without setting up a proxy.
 
 Open Chrome DevTools, capture requests from the page you're testing, edit them, and replay instantly.
 
@@ -41,28 +41,28 @@ Think **Burp-style request replay with a Postman-like UI**, built directly into 
 
 ## A Shorter Workflow
 
-| Postman                     | Burp Suite          | BrutuSuite           |
+| Postman                     | Burp Suite          | WebSlurp           |
 | --------------------------- | ------------------- | -------------------- |
 | Open browser                | Open browser        | Open browser         |
-| Inspect Network → XHR/Fetch | Open Burp Suite     | Inspect → BrutuSuite |
+| Inspect Network → XHR/Fetch | Open Burp Suite     | Inspect → WebSlurp |
 | Copy request data           | Capture / intercept | Edit request         |
 | Open Postman                | Edit request        | Send request         |
 | Build / import request      | Send request        |                      |
 | Edit request                |                     |                      |
 | Send request                |                     |                      |
 
-BrutuSuite keeps the workflow where the request already happens: **inside your browser**.
+WebSlurp keeps the workflow where the request already happens: **inside your browser**.
 
 ## Try It
 
-Install BrutuSuite, open Chrome DevTools, and start capturing.
+Install WebSlurp, open Chrome DevTools, and start capturing.
 
 ## Installation
 
 1. Clone the repository
 
     ```bash
-    git clone https://github.com/hangga/brutusuite.git
+    git clone https://github.com/hangga/webslurp.git
     ```
 
 2. Open Chrome Extensions → Developer Mode (Enable)
@@ -70,9 +70,9 @@ Install BrutuSuite, open Chrome DevTools, and start capturing.
     <img src="chrome-extension.png" width="500"/>
    </p>
 3. Click Load unpacked. 
-4. Select the **brutusuite** directory.
+4. Select the **webslurp** directory.
 
-A new **BrutuSuite** tab will appear.
+A new **WebSlurp** tab will appear.
 
 <p align="center">
 Made with ❤️ by Hangga Aji Sayekti

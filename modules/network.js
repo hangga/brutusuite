@@ -305,15 +305,15 @@ export function startCapture() {
     await saveLogs();
     renderList();
 
-    if (selectedId === null) {
-      setSelectedId(0);
-      renderDetail(0);
-    } else {
-      // selectedId akan bergeser karena unshift
-      // kita update referensi
-      setSelectedId(0);
-      renderDetail(0);
-    }
+    // if (selectedId === null) {
+    //   setSelectedId(0);
+    //   renderDetail(0);
+    // } else {
+    //   // selectedId akan bergeser karena unshift
+    //   // kita update referensi
+    //   setSelectedId(0);
+    //   renderDetail(0);
+    // }
   });
 }
 

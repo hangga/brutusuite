@@ -17,9 +17,66 @@ const bar = document.getElementById('progress-bar');
 const stickySearch = document.getElementById('sticky-search');
 const expandedSubGroups = new Set();
 
+const severityOrder = ['info', 'low', 'medium', 'high', 'critical'];
+const severityIcons = {
+    info: 'ℹ️',
+    low: '🟢',
+    medium: '🟡',
+    high: '🟠',
+    critical: '🔴'
+  };
+
 // --- Batasi jumlah tampilan untuk mencegah hang ---
 const MAX_DISPLAY_LOGS = 200;
 let delegationInitialized = false;
+
+// ============================================================
+// KOMBINASI TEMUAN KEAMANAN
+// ============================================================
+
+function getCombinedSecurityInfo(log) {
+  const findings = log.securityFindings || [];
+  const sensitive = log.sensitiveTypes || { pii: [], secrets: [] };
+  const hasSensitive = log.hasSensitiveData || false;
+
+  let combined = [];
+
+  // Temuan dari analyzeSecurityHeaders
+  findings.forEach(f => combined.push({ ...f }));
+
+  // Tambahkan temuan dari detectSensitiveData
+  if (hasSensitive) {
+    if (sensitive.pii && sensitive.pii.length > 0) {
+      combined.push({
+        type: 'pii',
+        severity: 'medium',
+        icon: '👤',
+        message: `PII detected: ${sensitive.pii.join(', ')}`
+      });
+    }
+    if (sensitive.secrets && sensitive.secrets.length > 0) {
+      combined.push({
+        type: 'secrets',
+        severity: 'high',
+        icon: '🔑',
+        message: `Secrets detected: ${sensitive.secrets.join(', ')}`
+      });
+    }
+  }
+
+  // Cari temuan dengan severity tertinggi
+  let highest = null;
+  let highestIndex = -1;
+  combined.forEach((item, idx) => {
+    const sevIndex = severityOrder.indexOf(item.severity);
+    if (sevIndex > highestIndex) {
+      highestIndex = sevIndex;
+      highest = item;
+    }
+  });
+
+  return { highest, all: combined };
+}
 
 // ── Event delegation: pasang sekali di container ──
 export function initDelegation() {
@@ -89,7 +146,7 @@ export function initDelegation() {
 export function renderList(callback) {
   // Pastikan delegation terpasang
   initDelegation();
-
+  
   const filtered = filterLogs();
   countBadge.textContent = filtered.length;
   statusCount.textContent = `${filtered.length} request${filtered.length !== 1 ? 's' : ''}`;
@@ -199,10 +256,40 @@ export function renderList(callback) {
         if (log.note) entry.classList.add('has-note');
         entry.dataset.index = realIdx;
 
+        // masih PR disini
+        const securityFindings = log.securityFindings || [];
+
+
+        // const highestSeverity = securityFindings.reduce(
+        //   (highest, { severity }) =>
+        //     severityOrder.indexOf(severity) > severityOrder.indexOf(highest)
+        //       ? severity
+        //       : highest,
+        //   ''
+        // );
+
+        // const securityBadge = highestSeverity
+        //   ? `<span class="security-badge ${highestSeverity}" title="${escapeHtml(
+        //       securityFindings.map(({ message }) => message).join('\n')
+        //     )}">${severityIcons[highestSeverity] || '🛡️'}</span>`
+        //   : '';
+
+        const combinedSecurity = getCombinedSecurityInfo(log);
+        const highest = combinedSecurity.highest;
+        const securityBadge = highest
+          ? `<span class="security-badge ${highest.severity}"
+                title="${escapeHtml(combinedSecurity.all.map(f => f.message).join('\n'))}">
+                ${highest.icon}
+              </span>`
+          : '';
+
+            // ${securityBadge}
+            //${log.hasSensitiveData ? '<span class="sensitive-indicator">⚠️</span>' : ''}
         entry.innerHTML = `
+          ${securityBadge? securityBadge :''}
           <span class="req-icon">${getCategoryIcon(log.category)}</span>
           ${log.hasAuth ? '<span class="auth-indicator">🔐</span>' : ''}
-          ${log.hasSensitiveData ? '<span class="sensitive-indicator">⚠️</span>' : ''}
+          
           <span class="status ${sc}">${log.status}</span>
           <span class="method">${log.method || 'GET'}</span>
           <span class="url">${escapeHtml(log.url)}</span>
@@ -213,7 +300,8 @@ export function renderList(callback) {
         const authTitle = log.hasAuth ? '🔐 Authenticated' : '';
         const pii = log.sensitiveTypes?.pii?.length ? '👤 PII' : '';
         const secrets = log.sensitiveTypes?.secrets?.length ? '🔑 Secrets' : '';
-        entry.title = [authTitle, pii, secrets].filter(Boolean).join(' • ');
+        const sec = securityFindings.length > 0 ? securityFindings.message : '';
+        entry.title = [authTitle, pii, secrets, sec].filter(Boolean).join(' • ');
         
         subBody.appendChild(entry);
       });
@@ -361,6 +449,23 @@ export function renderDetail(idx) {
       ${log.response ? `<span class="rsize">📦 ${(log.response.length / 1024).toFixed(1)} KB</span>` : ''}
       <span class="rbadge">${log.mime || 'unknown'}</span>
     </div>`;
+
+    // --- Security Warning Box ---
+    const combinedSecurity = getCombinedSecurityInfo(log);
+    if (combinedSecurity.all.length > 0) {
+      html += `<div class="security-warning-box">`;
+      html += `<div class="sw-title">🛡️ Security Summary</div>`;
+      combinedSecurity.all.forEach(f => {
+        console.log('CEK-saveritynya ===========> ', f.severity);
+        console.log('CEK-saveritynya ===========> ', f.severity.toLowerCase());
+        html += `<div class="sw-item">
+                  <span>${f.icon || '⚠️'}</span>
+                  <span>${escapeHtml(f.message)}</span>
+                  <span class="sw-severity ${f.severity.toLowerCase().trim()}">${f.severity}</span>
+                </div>`;
+      });
+      html += `</div>`;
+    }
     
     const respHeaders = headersToArray(log.responseHeaders || {});
     

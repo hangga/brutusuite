@@ -118,7 +118,6 @@ themeSelect.addEventListener('change', async (e) => {
 });
 
 async function initCaptureFilter() {
-  // setLoading(false);
   const stored = await loadCaptureFilter();
   if (stored) {
     captureFilter.mode = stored.mode;
@@ -197,7 +196,7 @@ reloadBtn.addEventListener('click', () => {
   }
 });
 
-const tabId = chrome.devtools.inspectedWindow.tabId; // tersedia di DevTools
+// const tabId = chrome.devtools.inspectedWindow.tabId; // tersedia di DevTools
 
 // Pantau perubahan status tab
 // chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {

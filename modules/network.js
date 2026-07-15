@@ -4,9 +4,8 @@ import { logs, selectedId, sendingId, activeTab, setSendingId, setSelectedId, se
 import { escapeHtml, headersToObject, ensureValidUrl, cleanHeaders, detectCategory } from './helpers.js';
 import { saveLogs, saveSettings } from './storage.js';
 import { renderList, renderDetail } from './render.js';
-import { detectSensitiveData, detectAuth } from './security.js';
+import { detectSensitiveData, detectAuth, analyzeSecurityHeaders } from './security.js';
 
-// ── Helper deteksi tipe ──
 // ── Helper deteksi tipe ──
 function detectType(request) {
   const url = request.request.url;
@@ -245,30 +244,12 @@ export function startCapture() {
     let hasAuth = false;
 
     const reqHeaders = {};
-    // request.request.headers.forEach(h => { reqHeaders[h.name] = h.value; });
 
     request.request.headers.forEach(({ name, value }) => {
       reqHeaders[name.toLowerCase()] = value;
     });
 
-    const auth = detectAuth(reqHeaders);
-
-    hasAuth = auth.hasAuth;
-
-    // hasAuth = AUTH_HEADERS.some(header => reqHeaders[header]);
-
-    // if (!hasAuth && reqHeaders.cookie) {
-    //   const cookieNames = reqHeaders.cookie
-    //     .split(';')
-    //     .map(cookie => cookie.split('=', 1)[0].trim().toLowerCase());
-
-    //   hasAuth = cookieNames.some(name =>
-    //     AUTH_COOKIE_PATTERNS.some(pattern =>
-    //       name === pattern ||
-    //       name.includes(pattern)
-    //     )
-    //   );
-    // }
+    hasAuth = detectAuth(reqHeaders).hasAuth;
 
     const queryParams = (request.request.queryString || [])
       .filter(({ name }) => name)
@@ -308,6 +289,8 @@ export function startCapture() {
 
     const sensitive = detectSensitiveData(responseBody);
 
+    const securityFindings = analyzeSecurityHeaders(respHeaders);
+
     const log = {
       time: new Date().toLocaleTimeString(),
       url: request.request.url,
@@ -331,7 +314,8 @@ export function startCapture() {
       sensitiveTypes: {
         pii: sensitive.pii.types,
         secrets: sensitive.secrets.types
-      }
+      },
+      securityFindings:securityFindings
     };
 
     logs.unshift(log);

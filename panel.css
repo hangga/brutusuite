@@ -2908,8 +2908,102 @@ body {
   display: none;
 }
 
-/* .auth-indicator {
-  display: inline-block;
-  margin-right: 4px;
+/* ── SECURITY WARNING BOX ── */
+.security-warning-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left-width: 4px;
+  border-left-color: var(--accent);
+  padding: 10px 14px;
+  margin: 8px 0 12px 0;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.security-warning-box .sw-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.security-warning-box .sw-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 12px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+}
+.security-warning-box .sw-item:last-child {
+  border-bottom: none;
+}
+
+.security-warning-box .sw-item .sw-icon {
   font-size: 14px;
-} */
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.security-warning-box .sw-item .sw-message {
+  flex: 1;
+  word-break: break-word;
+}
+
+.security-warning-box .sw-item .sw-severity {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  /* background: var(--badge-bg); */
+  /* color: var(--badge-text); */
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Severity colors – warna solid yang tetap terbaca di semua tema */
+.sw-severity.critical {
+  background: #C60000 !important;;
+  color: #fff !important;;
+}
+.sw-severity.high {
+  background: #ED6F00 !important;;
+  color: #fff !important;;
+}
+.sw-severity.medium {
+  background: yellow !important;;
+  color: #333 !important;;
+}
+.sw-severity.low {
+  background: limegreen !important;;
+  color: #333 !important;;
+}
+.sw-severity.info {
+  background: skyblue !important;;
+  color: #333 !important;;
+}
+
+/* Opsional: ubah warna border-left berdasarkan severity tertinggi */
+.security-warning-box.sw-critical {
+  border-left-color: #ff1744;
+}
+.security-warning-box.sw-high {
+  border-left-color: #ff9100;
+}
+.security-warning-box.sw-medium {
+  border-left-color: #ffea00;
+}
+.security-warning-box.sw-low {
+  border-left-color: #69f0ae;
+}
+.security-warning-box.sw-info {
+  border-left-color: #90caf9;
+}

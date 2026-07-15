@@ -64,53 +64,6 @@ function isValidLuhn(value) {
 // ============================================================
 // PII DETECTION
 // ============================================================
-
-// export function detectPII(text) {
-//   if (!text || typeof text !== 'string') {
-//     return { hasPii: false, types: [] };
-//   }
-
-//   const patterns = [
-//     { type: 'email', regex: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi },
-//     { type: 'phone', regex: /(?<!\d)(?:\+\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?)?\d{3,4}[\s.-]?\d{3,4}(?!\d)/g },
-//     { type: 'ipv4', regex: /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/g },
-//     { type: 'ipv6', regex: /\b(?:[A-F0-9]{1,4}:){2,7}[A-F0-9]{1,4}\b/gi },
-//     { type: 'ssn', regex: /\b(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}\b/g },
-//     { type: 'nik', regex: /\b\d{16}\b/g },
-//     { type: 'credit_card', regex: /\b(?:\d[ -]?){13,19}\b/g, validator: isValidLuhn }
-//   ];
-
-//   const found = findPatternMatches(text, patterns);
-
-//   const json = tryParseJSON(text);
-//   if (json) {
-//     const keyPatterns = [
-//       { type: 'name', regex: /^(?:name|full_name|first_name|last_name|firstname|lastname)$/ },
-//       { type: 'email', regex: /^(?:email|email_address|emailaddress)$/ },
-//       { type: 'phone', regex: /^(?:phone|phone_number|phonenumber|mobile|mobile_number|mobilenumber|telephone)$/ },
-//       { type: 'address', regex: /^(?:address|street_address|home_address|postal_address)$/ },
-//       { type: 'date_of_birth', regex: /^(?:dob|date_of_birth|dateofbirth|birth_date|birthdate)$/ },
-//       { type: 'location', regex: /^(?:latitude|longitude|lat|lng|location|coordinates)$/ },
-//       { type: 'nik', regex: /^(?:nik|national_id|nationalid)$/ },
-//       { type: 'ssn', regex: /^(?:ssn|social_security_number)$/ },
-//       { type: 'credit_card', regex: /^(?:credit_card|creditcard|card_number|cardnumber|pan)$/ }
-//     ];
-
-//     traverseJSON(json, (key, value) => {
-//       if (value === null || value === undefined || value === '') return;
-//       const normalizedKey = normalizeKey(key);
-//       for (const pattern of keyPatterns) {
-//         if (pattern.regex.test(normalizedKey)) {
-//           found.add(pattern.type);
-//           break;
-//         }
-//       }
-//     });
-//   }
-
-//   return { hasPii: found.size > 0, types: [...found] };
-// }
-
 export function detectPII(text) {
   if (!text || typeof text !== 'string') {
     return {
@@ -594,28 +547,87 @@ export function detectSecrets(text) {
     return { hasSecrets: false, types: [] };
   }
 
+  // const patterns = [
+  //   { type: 'jwt', regex: /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g },
+  //   { type: 'bearer_token', regex: /\bBearer\s+[A-Za-z0-9._~+/=-]{10,}\b/gi },
+  //   { type: 'api_key', regex: /\b(?:api[-_.]?key|apikey)\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
+  //   { type: 'access_token', regex: /\baccess[-_.]?token\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
+  //   { type: 'refresh_token', regex: /\brefresh[-_.]?token\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
+  //   { type: 'auth_token', regex: /\bauth[-_.]?token\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
+  //   { type: 'password', regex: /\b(?:password|passwd|pwd)\b\s*["']?\s*[:=]\s*["']?[^\s"',}&]{3,}/gi },
+  //   { type: 'client_secret', regex: /\bclient[-_.]?secret\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
+  //   { type: 'secret_key', regex: /\b(?:secret[-_.]?key|api[-_.]?secret)\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
+  //   { type: 'private_key', regex: /-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/g }
+  // ];
+
+  // const found = findPatternMatches(text, patterns);
+
+  // const vendorPatterns = [
+  //   { type: 'aws_access_key', regex: /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g },
+  //   { type: 'github_token', regex: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g },
+  //   { type: 'github_pat', regex: /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g },
+  //   { type: 'google_api_key', regex: /\bAIza[A-Za-z0-9_-]{35}\b/g },
+  //   { type: 'stripe_secret_key', regex: /\bsk_(?:live|test)_[A-Za-z0-9]{16,}\b/g },
+  //   { type: 'slack_token', regex: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/g }
+  // ];
+
+  const VALUE = `[A-Za-z0-9._~+/=-]{8,}`;
+
   const patterns = [
+    // Generic
     { type: 'jwt', regex: /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g },
     { type: 'bearer_token', regex: /\bBearer\s+[A-Za-z0-9._~+/=-]{10,}\b/gi },
-    { type: 'api_key', regex: /\b(?:api[-_.]?key|apikey)\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
-    { type: 'access_token', regex: /\baccess[-_.]?token\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
-    { type: 'refresh_token', regex: /\brefresh[-_.]?token\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
-    { type: 'auth_token', regex: /\bauth[-_.]?token\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
-    { type: 'password', regex: /\b(?:password|passwd|pwd)\b\s*["']?\s*[:=]\s*["']?[^\s"',}&]{3,}/gi },
-    { type: 'client_secret', regex: /\bclient[-_.]?secret\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
-    { type: 'secret_key', regex: /\b(?:secret[-_.]?key|api[-_.]?secret)\b\s*["']?\s*[:=]\s*["']?[A-Za-z0-9._~+/=-]{8,}/gi },
-    { type: 'private_key', regex: /-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/g }
-  ];
+    { type: 'private_key', regex: /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----/g },
 
-  const found = findPatternMatches(text, patterns);
+    // Common secret fields
+    ...[
+      'api[-_.]?key',
+      'access[-_.]?token',
+      'refresh[-_.]?token',
+      'id[-_.]?token',
+      'auth(?:entication)?[-_.]?token',
+      'oauth[-_.]?token',
+      'session[-_.]?(?:token|id)',
+      '(?:csrf|xsrf)[-_.]?token',
+      'client[-_.]?secret',
+      'client[-_.]?id',
+      'secret[-_.]?key',
+      'api[-_.]?secret'
+    ].map(name => ({
+      type: name.replace(/[^\w]+/g, '_'),
+      regex: new RegExp(`\\b(?:${name})\\b\\s*["']?\\s*[:=]\\s*["']?${VALUE}`, 'gi')
+    })),
+
+    // Passwords
+    {
+      type: 'password',
+      regex: /\b(?:password|passwd|pwd)\b\s*["']?\s*[:=]\s*["']?[^\s"',}&]{3,}/gi
+    },
+
+    // Cookies
+    {
+      type: 'cookie',
+      regex: /\b(?:set-cookie|cookie)\b\s*[:=]\s*[^\r\n]{10,}/gi
+    }
+  ];
 
   const vendorPatterns = [
     { type: 'aws_access_key', regex: /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g },
-    { type: 'github_token', regex: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g },
-    { type: 'github_pat', regex: /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g },
+    { type: 'github_token', regex: /\b(?:gh[pours]|github_pat)_[A-Za-z0-9_]{20,}\b/g },
+    { type: 'gitlab_token', regex: /\bglpat-[A-Za-z0-9_-]{20,}\b/g },
     { type: 'google_api_key', regex: /\bAIza[A-Za-z0-9_-]{35}\b/g },
-    { type: 'stripe_secret_key', regex: /\bsk_(?:live|test)_[A-Za-z0-9]{16,}\b/g },
-    { type: 'slack_token', regex: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/g }
+    { type: 'stripe_key', regex: /\b(?:sk|pk)_(?:live|test)_[A-Za-z0-9]{16,}\b/g },
+    { type: 'slack_token', regex: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/g },
+    { type: 'sendgrid_api_key', regex: /\bSG\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\b/g },
+    { type: 'mailgun_api_key', regex: /\bkey-[A-Za-z0-9]{32}\b/g },
+    { type: 'twilio_sid', regex: /\b(?:AC|SK)[a-f0-9]{32}\b/gi },
+    { type: 'shopify_access_token', regex: /\bshpat_[A-Za-z0-9]{32,}\b/g },
+    { type: 'openai_api_key', regex: /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/g }
+  ];
+
+  const found = [
+    ...findPatternMatches(text, patterns),
+    ...findPatternMatches(text, vendorPatterns)
   ];
 
   const vendorFound = findPatternMatches(text, vendorPatterns);
@@ -866,4 +878,137 @@ function isValidTokenValue(value) {
   }
 
   return value.length >= 8;
+}
+
+const severityIcons = {
+  info: 'ℹ️',
+  low: '🟢',
+  medium: '🟡',
+  high: '🟠',
+  critical: '🔴'
+};
+
+// sesuai namanya.. dah jelaskan..
+export function analyzeSecurityHeaders(headers) {
+  const findings = [];
+
+  const getHeader = (name) => {
+    const value = headers[name.toLowerCase()];
+    return Array.isArray(value) ? value : value ? [value] : [];
+  };
+
+  const hasHeader = (name) => getHeader(name).length > 0;
+
+  // const addFinding = (type, severity, message) => {
+  //   findings.push({
+  //     type,
+  //     severity,
+  //     icon: severityIcons[severity] ?? '',
+  //     message: `${severityIcons[severity] ?? ''} [${severity.toUpperCase()}] ${message}`
+  //   });
+  // };
+
+  const addFinding = (type, severity, message) => {
+    findings.push({
+      type,
+      severity,
+      icon: severityIcons[severity] ?? '',
+      message: `[${severity.toUpperCase()}] ${message}`
+    });
+  };
+
+  // Missing security headers
+  // if (!hasHeader('content-security-policy')) {
+  //   addFinding(
+  //     'missing-csp',
+  //     'medium',
+  //     'Content-Security-Policy header is missing'
+  //   );
+  // }
+
+  const contentType = getHeader('content-type').join(',').toLowerCase();
+
+  const isHtml =
+    contentType.includes('text/html') ||
+    contentType.includes('application/xhtml+xml');
+
+  // hanya cek CSP untuk dokumen HTML
+  if (isHtml && !hasHeader('content-security-policy')) {
+    addFinding(
+      'missing-csp',
+      'low', // atau 'info'
+      'No CSP on HTML document (defense-in-depth)'
+    );
+  }
+
+  // if (!hasHeader('strict-transport-security')) {
+  //   addFinding(
+  //     'missing-hsts',
+  //     'low',
+  //     'Strict-Transport-Security header is missing'
+  //   );
+  // }
+
+  // if (!hasHeader('x-content-type-options')) {
+  //   addFinding(
+  //     'missing-nosniff',
+  //     'low',
+  //     'X-Content-Type-Options header is missing'
+  //   );
+  // }
+
+  // CORS
+  if (getHeader('access-control-allow-origin').includes('*')) {
+    addFinding(
+      'cors-wildcard',
+      'medium',
+      'Wildcard CORS policy detected'
+    );
+  }
+
+  // Technology disclosure
+  for (const value of getHeader('server')) {
+    addFinding(
+      'server-disclosure',
+      'info',
+      `Server disclosed: ${value}`
+    );
+  }
+
+  for (const value of getHeader('x-powered-by')) {
+    addFinding(
+      'technology-disclosure',
+      'info',
+      `Technology disclosed: ${value}`
+    );
+  }
+
+  // Cookie security
+  for (const cookie of getHeader('set-cookie')) {
+    if (!/;\s*secure\b/i.test(cookie)) {
+      addFinding(
+        'cookie-missing-secure',
+        'medium',
+        'Cookie is missing the Secure attribute'
+      );
+    }
+
+    if (!/;\s*httponly\b/i.test(cookie)) {
+      addFinding(
+        'cookie-missing-httponly',
+        'medium',
+        'Cookie is missing the HttpOnly attribute'
+      );
+    }
+
+    if (!/;\s*samesite=/i.test(cookie)) {
+      addFinding(
+        'cookie-missing-samesite',
+        'low',
+        'Cookie is missing the SameSite attribute'
+      );
+    }
+  }
+
+  return findings;
 }

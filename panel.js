@@ -100,7 +100,8 @@ chrome.storage.onChanged.addListener((changes, ns) => {
   if (latest) {
     if (latest.version !== currentVersion) {
       document.getElementById('about-version-btn').textContent =
-        `v${currentVersion} • Version ${latest.version} is available. Update now 🚀`;
+        // `v${currentVersion} • v${latest.version} is available. Update now 🚀`;
+        `v${latest.version} is available. Update now 🚀`;
     }
   }
 })();
@@ -313,8 +314,8 @@ if (aboutVersion) {
 
     if (latest) {
       if (latest.version !== currentv) {
-        document.getElementById('about-version-btn').textContent =
-          `v${currentv} • Version ${latest.version} is available. Update now 🚀`;
+        aboutVersion.textContent =
+          `v${currentv} • v${latest.version} is available. Update now 🚀`;
       }
     }
   } catch (_) {

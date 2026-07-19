@@ -379,3 +379,25 @@ export function detectCategory({
 
     return 'other';
 }
+
+export async function getLatestVersion() {
+  try {
+    const res = await fetch(
+      "https://raw.githubusercontent.com/hangga/webslurp/refs/heads/main/manifest.json"
+    );
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    console.log(data.version); // 1.5.0
+    console.log(data.message);
+
+    return data;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}

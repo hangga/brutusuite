@@ -13,6 +13,7 @@ import { renderList, renderDetail } from './modules/render.js';
 import { startCapture } from './modules/network.js';
 import { refresh } from './modules/refresh.js';
 import { theme, setTheme, captureFilter } from './modules/state.js';
+import { getLatestVersion } from './modules/helpers.js';
 
 const reloadBtn = document.getElementById('reload-btn');
 const btnIcon = document.getElementById('btn-icon'); // atau img
@@ -86,11 +87,27 @@ chrome.storage.onChanged.addListener((changes, ns) => {
   await refresh();
   await loadTheme();
   await loadTimeoutSetting();
+
   startCapture();
   statusText.textContent = 'Listening…';
-  // console.log('[WebSlurp] Panel siap, menunggu request...');
-  document.getElementById('about-version-btn').textContent = 'v'+chrome.runtime.getManifest().version;
+
+  const currentVersion = chrome.runtime.getManifest().version;
+
+  document.getElementById('about-version-btn').textContent = `v${currentVersion}`;
+
+  const latest = await getLatestVersion();
+
+  if (latest) {
+    if (latest.version !== currentVersion) {
+      document.getElementById('about-version-btn').textContent =
+        // `v${currentVersion} • v${latest.version} is available. Update now 🚀`;
+        `v${latest.version} is available. Update now 🚀`;
+    }
+  }
 })();
+
+
+
 
 // ── Tema ──
 const themeSelect = document.getElementById('theme-select');
@@ -288,8 +305,19 @@ const aboutVersion = document.getElementById('about-version');
 
 if (aboutVersion) {
   try {
-    const manifest = chrome.runtime.getManifest();
-    aboutVersion.textContent = manifest.version || '1.0.0';
+    const currentv = chrome.runtime.getManifest().version;
+    aboutVersion.textContent = currentv || '1.0.0';
+
+    const latest = await getLatestVersion();
+
+    console.log('VESRSI TERANYAR', latest.version);
+
+    if (latest) {
+      if (latest.version !== currentv) {
+        aboutVersion.textContent =
+          `v${currentv} • v${latest.version} is available. Update now 🚀`;
+      }
+    }
   } catch (_) {
     aboutVersion.textContent = '1.0.0';
   }
